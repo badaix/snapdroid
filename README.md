@@ -1,8 +1,5 @@
 # snapdroid
 
-```
- ____  __ _   __   ____  ____  ____   __  __  ____ 
-/ ___)(  ( \ / _\ (  _ \(    \(  _ \ /  \(  )(    \
-\___ \/    //    \ ) __/ ) D ( )   /(  O ))(  ) D (
-(____/\_)__)\_/\_/(__)  (____/(__\_) \__/(__)(____/
-```
+Snapcast client for Android
+
+![Snapcast for Android](https://raw.githubusercontent.com/badaix/snapcast/master/doc/snapcast_android_scaled.png)
