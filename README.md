@@ -4,7 +4,7 @@ Snapcast control client and player for Android
 
 [![Github Releases](https://img.shields.io/github/release/badaix/snapdroid.svg)](https://github.com/badaix/snapdroid/releases)
 
-Snapdroid is using the [Snapcast JSON-RPC API](doc/json_rpc_api/v2_0_0.md) to control [Snapcast](https://github.com/badaix/snapcast) and bundles native Android ARM and X86 Snapclients for audio playback
+Snapdroid is using the [Snapcast JSON-RPC API](https://github.com/badaix/snapcast/blob/master/doc/json_rpc_api/v2_0_0.md) to control [Snapcast](https://github.com/badaix/snapcast) and bundles native Android ARM and X86 Snapclients for audio playback
 
 ![Snapcast for Android](https://raw.githubusercontent.com/badaix/snapcast/master/doc/snapcast_android_scaled.png)
 
