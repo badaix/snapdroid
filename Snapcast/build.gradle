@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    buildToolsVersion '28.0.1'
 
     defaultConfig {
         applicationId "de.badaix.snapcast"
         minSdkVersion 16
         targetSdkVersion 27
-        versionCode 1400
-        versionName "0.14.0"
+        versionCode 1500
+        versionName "0.15.0"
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
     }
