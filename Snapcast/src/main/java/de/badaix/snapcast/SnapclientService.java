@@ -19,6 +19,7 @@
 package de.badaix.snapcast;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -26,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
@@ -48,6 +50,8 @@ public class SnapclientService extends Service {
     public static final String EXTRA_PORT = "EXTRA_PORT";
     public static final String ACTION_START = "ACTION_START";
     public static final String ACTION_STOP = "ACTION_STOP";
+    public static final String NOTIFICATION_CHANNEL_ID = "de.badaix.snapcast.snapclientservice.defaultchannel";
+
     private final IBinder mBinder = new LocalBinder();
     private java.lang.Process process = null;
     private PowerManager.WakeLock wakeLock = null;
@@ -63,6 +67,25 @@ public class SnapclientService extends Service {
 
     public void setListener(SnapclientListener listener) {
         this.listener = listener;
+    }
+
+    public void initChannels(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return;
+        }
+        NotificationManager notificationManager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,
+                "Snapclient service",
+                NotificationManager.IMPORTANCE_LOW);
+        channel.setDescription("Snapcast player service");
+        notificationManager.createNotificationChannel(channel);
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        initChannels(this);
     }
 
     @Override
@@ -82,7 +105,7 @@ public class SnapclientService extends Service {
             PendingIntent piStop = PendingIntent.getService(this, 0, stopIntent, 0);
 
             NotificationCompat.Builder builder =
-                    new NotificationCompat.Builder(this, "default_notification_channel_id")
+                    new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                             .setSmallIcon(R.drawable.ic_media_play)
                             .setTicker(getText(R.string.ticker_text))
                             .setContentTitle(getText(R.string.notification_title))
