@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
         groupListFragment.setHideOffline(Settings.getInstance(this).getBoolean("hide_offline", false));
 
         setActionbarSubtitle("Host: no Snapserver found");
+        serverStatus = new ServerStatus();
 
         new Thread(new Runnable() {
             @Override
@@ -417,8 +418,10 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
             Log.d(TAG, "new latency: " + client.getConfig().getLatency() + ", old latency: " + clientOriginal.getConfig().getLatency());
             if (client.getConfig().getLatency() != clientOriginal.getConfig().getLatency())
                 remoteControl.setLatency(client, client.getConfig().getLatency());
-            serverStatus.updateClient(client);
-            groupListFragment.updateServer(MainActivity.this.serverStatus);
+            if (serverStatus != null) {
+                serverStatus.updateClient(client);
+                groupListFragment.updateServer(serverStatus);
+            }
         } else if (requestCode == GROUP_PROPERTIES_REQUEST) {
             String groupId = data.getStringExtra("group");
             boolean changed = false;

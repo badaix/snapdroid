@@ -152,7 +152,10 @@ public class GroupListFragment extends Fragment {
 
 
         void update() {
-            getActivity().runOnUiThread(new Runnable() {
+            android.support.v4.app.FragmentActivity activity = getActivity();
+            if (activity == null)
+                return;
+            activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     clear();
