@@ -21,6 +21,7 @@ package de.badaix.snapcast;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.text.TextUtils;
 
 import de.badaix.snapcast.utils.Settings;
@@ -44,7 +45,12 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 i.putExtra(SnapclientService.EXTRA_PORT, port);
                 i.setAction(SnapclientService.ACTION_START);
 
-                context.startService(i);
+                if (Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
+                    context.startForegroundService(i);
+                }
+                else {
+                    context.startService(i);
+                }
             }
         }
     }
