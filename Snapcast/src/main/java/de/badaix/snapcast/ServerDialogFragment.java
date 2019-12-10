@@ -26,6 +26,7 @@ import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -39,6 +40,7 @@ import de.badaix.snapcast.utils.NsdHelper;
  */
 public class ServerDialogFragment extends DialogFragment implements View.OnClickListener {
 
+    private static final String TAG = "ServerDialog";
     private Button btnScan;
     private EditText editHost;
     private EditText editStreamPort;
@@ -56,6 +58,7 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateDialog");
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         // Get the layout inflater
         LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -105,6 +108,7 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
         NsdHelper.getInstance(getContext()).startListening("_snapcast._tcp.", "Snapcast", new NsdHelper.NsdHelperListener() {
             @Override
             public void onResolved(NsdHelper nsdHelper, NsdServiceInfo serviceInfo) {
+                Log.d(TAG, "onResolved: " + serviceInfo.getHost().getCanonicalHostName());
                 setHost(serviceInfo.getHost().getCanonicalHostName(), serviceInfo.getPort(), serviceInfo.getPort() + 1);
             }
         });
@@ -113,6 +117,7 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Log.d(TAG, "onAttach");
 
         if (context instanceof Activity) {
             update();
@@ -120,6 +125,7 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
     }
 
     private void update() {
+        Log.d(TAG, "update");
         if (this.getActivity() == null)
             return;
 

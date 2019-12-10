@@ -125,7 +125,7 @@ public class NsdHelper {
             public void onServiceFound(NsdServiceInfo serviceInfo) {
                 NsdServiceInfo info = serviceInfo;
                 Log.d(TAG, "Service found: " + info.getServiceName());
-                if (info.getServiceName().equals(serviceName))
+                if (info.getServiceName().startsWith(serviceName))
                     mNsdManager.resolveService(info, mResolveListener);
             }
 
