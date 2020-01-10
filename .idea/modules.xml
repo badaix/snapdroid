@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Snapcast/Snapcast.iml" filepath="$PROJECT_DIR$/Snapcast/Snapcast.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libs/libs.iml" filepath="$PROJECT_DIR$/libs/libs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libs/libsnapcast/libsnapcast.iml" filepath="$PROJECT_DIR$/libs/libsnapcast/libsnapcast.iml" />
       <module fileurl="file://$PROJECT_DIR$/snapdroid.iml" filepath="$PROJECT_DIR$/snapdroid.iml" />
     </modules>
   </component>
