@@ -210,7 +210,7 @@ public class SnapclientService extends Service {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-            wakeLock = powerManager.newWakeLock(PARTIAL_WAKE_LOCK, "SnapcastWakeLock");
+            wakeLock = powerManager.newWakeLock(PARTIAL_WAKE_LOCK, "snapcast:SnapcastWakeLock");
             wakeLock.acquire();
 
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
@@ -218,7 +218,7 @@ public class SnapclientService extends Service {
             wifiWakeLock.acquire();
 
             process = new ProcessBuilder()
-                    .command(binary.getAbsolutePath(), "-h", host, "-p", Integer.toString(port), "--hostID", getUniquePsuedoID())
+                    .command(this.getApplicationInfo().nativeLibraryDir + "/libsnapclient.so", "-h", host, "-p", Integer.toString(port), "--hostID", getUniquePsuedoID())
                     .redirectErrorStream(true)
                     .start();
 
