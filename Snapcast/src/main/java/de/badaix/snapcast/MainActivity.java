@@ -60,7 +60,6 @@ import de.badaix.snapcast.control.json.Stream;
 import de.badaix.snapcast.control.json.Volume;
 import de.badaix.snapcast.utils.NsdHelper;
 import de.badaix.snapcast.utils.Settings;
-import de.badaix.snapcast.utils.Setup;
 
 public class MainActivity extends AppCompatActivity implements GroupItem.GroupItemListener, RemoteControl.RemoteControlListener, SnapclientService.SnapclientListener, NsdHelper.NsdHelperListener {
 
@@ -142,16 +141,6 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
 
         setActionbarSubtitle("Host: no Snapserver found");
         serverStatus = new ServerStatus();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "copying snapclient");
-                Setup.copyBinAsset(MainActivity.this, "snapclient", "snapclient");
-                Log.d(TAG, "done copying snapclient");
-            }
-        }).start();
-
     }
 
     public void checkFirstRun() {
