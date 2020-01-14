@@ -153,7 +153,7 @@ public class ServerStatus implements JsonSerialisable {
     }
 
     public Client getClient(String id) {
-        for (Group group: groups) {
+        for (Group group : groups) {
             Client client = group.getClient(id);
             if (client != null)
                 return client;

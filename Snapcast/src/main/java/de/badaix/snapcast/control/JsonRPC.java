@@ -159,12 +159,10 @@ class RPCResponse {
         if (json.has("error")) {
             error = json.getJSONObject("error");
             result = null;
-        }
-        else if (json.has("result")) {
+        } else if (json.has("result")) {
             result = json.getJSONObject("result");
             error = null;
-        }
-        else
+        } else
             throw new JSONException("error and result are null");
     }
 

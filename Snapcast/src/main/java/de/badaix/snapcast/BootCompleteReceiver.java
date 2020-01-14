@@ -45,10 +45,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 i.putExtra(SnapclientService.EXTRA_PORT, port);
                 i.setAction(SnapclientService.ACTION_START);
 
-                if (Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(i);
-                }
-                else {
+                } else {
                     context.startService(i);
                 }
             }

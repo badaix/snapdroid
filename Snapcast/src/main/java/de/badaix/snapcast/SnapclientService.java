@@ -166,6 +166,7 @@ public class SnapclientService extends Service {
 
     /**
      * Return pseudo unique ID
+     *
      * @return ID
      */
     public static String getUniquePsuedoID() {

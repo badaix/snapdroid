@@ -368,16 +368,23 @@ public class RemoteControl implements TcpClient.TcpClientListener {
 
     public interface ClientListener {
         void onConnect(Client client);
+
         void onDisconnect(String clientId);
+
         void onUpdate(Client client);
+
         void onVolumeChanged(RPCEvent event, String clientId, Volume volume);
+
         void onLatencyChanged(RPCEvent event, String clientId, long latency);
+
         void onNameChanged(RPCEvent event, String clientId, String name);
     }
 
     public interface GroupListener {
         void onUpdate(Group group);
+
         void onMute(RPCEvent event, String groupId, boolean mute);
+
         void onStreamChanged(RPCEvent event, String groupId, String streamId);
     }
 
@@ -390,7 +397,6 @@ public class RemoteControl implements TcpClient.TcpClientListener {
     }
 
 
-
     public interface RemoteControlListener extends ServerListener, StreamListener, GroupListener, ClientListener {
         void onConnected(RemoteControl remoteControl);
 
@@ -399,6 +405,7 @@ public class RemoteControl implements TcpClient.TcpClientListener {
         void onDisconnected(RemoteControl remoteControl, Exception e);
 
         void onBatchStart();
+
         void onBatchEnd();
 /*
         void onClientEvent(RemoteControl remoteControl, RPCEvent rpcEvent, Client client, ClientEvent event);
