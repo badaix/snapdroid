@@ -25,6 +25,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.Build;
@@ -52,6 +53,9 @@ public class SnapclientService extends Service {
     public static final String ACTION_START = "ACTION_START";
     public static final String ACTION_STOP = "ACTION_STOP";
     public static final String NOTIFICATION_CHANNEL_ID = "de.badaix.snapcast.snapclientservice.defaultchannel";
+
+    private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
+    private static String uniqueID = null;
 
     private final IBinder mBinder = new LocalBinder();
     private java.lang.Process process = null;
@@ -202,6 +206,21 @@ public class SnapclientService extends Service {
         return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
     }
 
+    public synchronized static String getUniqueId(Context context) {
+        if (uniqueID == null) {
+            SharedPreferences sharedPrefs = context.getSharedPreferences(
+                    PREF_UNIQUE_ID, Context.MODE_PRIVATE);
+            uniqueID = sharedPrefs.getString(PREF_UNIQUE_ID, null);
+            if (uniqueID == null) {
+                uniqueID = UUID.randomUUID().toString();
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+                editor.putString(PREF_UNIQUE_ID, uniqueID);
+                editor.commit();
+            }
+        }
+        return uniqueID;
+    }
+
     private void start(String host, int port) {
         try {
             //https://code.google.com/p/android/issues/detail?id=22763
@@ -219,7 +238,7 @@ public class SnapclientService extends Service {
             wifiWakeLock.acquire();
 
             process = new ProcessBuilder()
-                    .command(this.getApplicationInfo().nativeLibraryDir + "/libsnapclient.so", "-h", host, "-p", Integer.toString(port), "--hostID", getUniquePsuedoID())
+                    .command(this.getApplicationInfo().nativeLibraryDir + "/libsnapclient.so", "-h", host, "-p", Integer.toString(port), "--hostID", getUniqueId(this.getApplicationContext()))
                     .redirectErrorStream(true)
                     .start();
 
