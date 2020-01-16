@@ -16,6 +16,8 @@
     <string name="action_scan">Scan for server</string>
     <string name="action_refresh">Refresh client list</string>
     <string name="action_hide_offline">Hide offline clients</string>
+    <string name="action_about_failed">error while creating the webview</string>
+    <string name="action_nullpointer">error. please open an issue regarding "API19"</string>
 
     <string name="title_activity_client_settings">Client settings</string>
     <string name="client_name">Name</string>

@@ -16,6 +16,8 @@
     <string name="action_scan">Suche nach Server</string>
     <string name="action_refresh">Aktualisiere Client-Liste</string>
     <string name="action_hide_offline">Verstecke offline Clients</string>
+    <string name="action_about_failed">Fehler bei Erstellung der webview</string>
+    <string name="action_nullpointer">Fehler. Bitte eine issue mit "Thema "API19" erstellen.</string>
 
     <string name="title_activity_client_settings">Client Einstellungen</string>
     <string name="client_name">Name</string>
