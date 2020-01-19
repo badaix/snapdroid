@@ -363,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
                     }
                 }
             }
-        } else if ("err".equals(logClass) || "Emerg".equals(logClass) || "Alert".equals(logClass) || "Crit".equals(logClass) || "Err".equals(logClass)) {
+        } else if ("err".equals(logClass) || "Emerg".equals(logClass) || "Alert".equals(logClass) || "Crit".equals(logClass) || "Err".equals(logClass) || "Error".equals(logClass)) {
             if (warningSamplerateSnackbar != null)
                 warningSamplerateSnackbar.dismiss();
             warningSamplerateSnackbar = Snackbar.make(findViewById(R.id.myCoordinatorLayout),
