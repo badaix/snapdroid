@@ -39,6 +39,7 @@
     <string name="title_activity_about">Über</string>
     <string name="about_file">files/about.html</string>
     <string name="about">Über</string>
+    <string name="action_bar_failed">ActionBar kann nicht erstellt werden</string>
 
     <string name="client_stream">Stream</string>
     <string name="first_run_title">Warnung</string>

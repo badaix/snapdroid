@@ -21,6 +21,7 @@ package de.badaix.snapcast;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.webkit.WebView;
 
@@ -33,6 +34,7 @@ public class AboutActivity extends AppCompatActivity {
         try {
             getSupportActionBar().setTitle(getString(R.string.about) + " Snapcast");
         } catch (Exception e) {
+            Snackbar.make(findViewById(R.id.webView), getText(R.string.action_bar_failed), Snackbar.LENGTH_LONG);
         }
         PackageInfo pInfo;
         try {
@@ -41,7 +43,7 @@ public class AboutActivity extends AppCompatActivity {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-        WebView wv = (WebView) findViewById(R.id.webView);
+        WebView wv = findViewById(R.id.webView);
         wv.loadUrl("file:///android_asset/" + this.getText(R.string.about_file));
     }
 }
