@@ -111,13 +111,21 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        for (int rate : new int[]{8000, 11025, 16000, 22050, 44100, 48000}) {  // add the rates you wish to check against
+            Log.d(TAG, "Samplerate: " + rate);
+            int bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
+            if (bufferSize > 0) {
+                Log.d(TAG, "Samplerate: " + rate + ", buffer: " + bufferSize);
+            }
+        }
+
         AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             String rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
             nativeSampleRate = Integer.valueOf(rate);
-            String size = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-            Log.d(TAG, "PROPERTY_OUTPUT_FRAMES_PER_BUFFER: " + size);
-            //tvInfo.setText("Sample rate: " + rate + ", buffer size: " + size);
+            Log.d(TAG, "Samplerate: " + nativeSampleRate);
+//            String size = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+//            tvInfo.setText("Sample rate: " + rate + ", buffer size: " + size);
         }
 
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.myCoordinatorLayout);
@@ -333,10 +341,10 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
     }
 
     @Override
-    public void onLog(SnapclientService snapclientService, String timestamp, String logClass, String msg) {
-        Log.d(TAG, "[" + logClass + "] " + msg);
+    public void onLog(SnapclientService snapclientService, String timestamp, String logClass, String tag, String msg) {
+        Log.d(TAG, "[" + logClass + "] (" + tag + ") " + msg);
         if ("Notice".equals(logClass)) {
-            if (msg.startsWith("sampleformat")) {
+            /* if (msg.startsWith("sampleformat")) {
                 msg = msg.substring(msg.indexOf(":") + 2);
                 Log.d(TAG, "sampleformat: " + msg);
                 if (msg.indexOf(':') > 0) {
@@ -355,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
                         warningSamplerateSnackbar.show();
                     }
                 }
-            }
+            } */
         } else if ("err".equals(logClass) || "Emerg".equals(logClass) || "Alert".equals(logClass) || "Crit".equals(logClass) || "Err".equals(logClass) || "Error".equals(logClass)) {
             if (warningSamplerateSnackbar != null)
                 warningSamplerateSnackbar.dismiss();
@@ -720,4 +728,3 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
         groupListFragment.updateServer(serverStatus);
     }
 }
-

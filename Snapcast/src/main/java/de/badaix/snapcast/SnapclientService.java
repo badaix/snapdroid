@@ -30,6 +30,7 @@ import android.media.AudioManager;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
@@ -40,7 +41,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -51,6 +51,8 @@ import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
  */
 
 public class SnapclientService extends Service {
+
+    private static final String TAG = "Service";
 
     public static final String EXTRA_HOST = "EXTRA_HOST";
     public static final String EXTRA_PORT = "EXTRA_PORT";
@@ -69,6 +71,10 @@ public class SnapclientService extends Service {
     private boolean running = false;
     private SnapclientListener listener = null;
     private boolean logReceived;
+    private Handler restartHandler = new Handler();
+    private Runnable restartRunnable = null;
+    private String host = null;
+    private int port = 0;
 
     public boolean isRunning() {
         return running;
@@ -225,6 +231,52 @@ public class SnapclientService extends Service {
         return uniqueID;
     }
 
+    private void startProcess() throws IOException {
+        String player = "oboe";
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            player = "opensl";
+        }
+
+        String rate = null;
+        String fpb = null;
+        String sampleformat = "*:16:2";
+        AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+            fpb = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+            sampleformat = rate + ":16:2";
+        }
+
+        ProcessBuilder pb = new ProcessBuilder()
+                .command(this.getApplicationInfo().nativeLibraryDir + "/libsnapclient.so", "-h", host, "-p", Integer.toString(port), "--hostID", getUniqueId(this.getApplicationContext()), "--player", player, "--sampleformat", sampleformat)
+                .redirectErrorStream(true);
+        Map<String, String> env = pb.environment();
+        if (rate != null)
+            env.put("SAMPLE_RATE", rate);
+        if (fpb != null)
+            env.put("FRAMES_PER_BUFFER", fpb);
+        process = pb.start();
+
+        Thread reader = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                BufferedReader bufferedReader = new BufferedReader(
+                        new InputStreamReader(process.getInputStream()));
+                String line;
+                try {
+                    while ((line = bufferedReader.readLine()) != null) {
+                        log(line);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        logReceived = false;
+        reader.start();
+    }
+
+
     private void start(String host, int port) {
         try {
             //https://code.google.com/p/android/issues/detail?id=22763
@@ -240,48 +292,9 @@ public class SnapclientService extends Service {
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
             wifiWakeLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "SnapcastWifiWakeLock");
             wifiWakeLock.acquire();
-
-            ProcessBuilder pb = new ProcessBuilder()
-                        .command(this.getApplicationInfo().nativeLibraryDir + "/libsnapclient.so", "-h", host, "-p", Integer.toString(port), "--hostID", getUniqueId(this.getApplicationContext()))
-                    .redirectErrorStream(true);
-            Map<String, String> env = pb.environment();
-            AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                String rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-                if (rate != null)
-                    env.put("SAMPLE_RATE", rate);
-                String fps = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-                if (fps != null)
-                    env.put("FRAMES_PER_BUFFER", fps);
-            }
-            process = pb.start();
-
-            Thread reader = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    BufferedReader bufferedReader = new BufferedReader(
-                            new InputStreamReader(process.getInputStream()));
-                    String line;
-                    try {
-                        while ((line = bufferedReader.readLine()) != null) {
-                            log(line);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            logReceived = false;
-            reader.start();
-
-            //TODO: wait for started message on stdout
-/*            long now = System.currentTimeMillis();
-            while (!logReceived) {
-                if (System.currentTimeMillis() > now + 1000)
-                    throw new Exception("start timeout");
-                Thread.sleep(100, 0);
-            }
-*/
+            this.host = host;
+            this.port = port;
+            startProcess();
         } catch (Exception e) {
             e.printStackTrace();
             if (listener != null)
@@ -298,20 +311,58 @@ public class SnapclientService extends Service {
                 listener.onPlayerStart(this);
         }
         if (listener != null) {
-            int idxBracketOpen = msg.indexOf('[');
-            int idxBracketClose = msg.indexOf(']', idxBracketOpen);
-            if ((idxBracketOpen > 0) && (idxBracketClose > 0)) {
-                listener.onLog(SnapclientService.this, msg.substring(0, idxBracketOpen - 1), msg.substring(idxBracketOpen + 1, idxBracketClose), msg.substring(idxBracketClose + 2));
+            int idxSeverityOpen = msg.indexOf('[');
+            int idxSeverityClose = msg.indexOf(']', idxSeverityOpen);
+            int idxTagOpen = msg.indexOf('(', idxSeverityClose);
+            int idxTagClose = msg.indexOf(')', idxTagOpen);
+            if ((idxSeverityOpen > 0) && (idxSeverityClose > 0)) {
+                String severity = msg.substring(idxSeverityOpen + 1, idxSeverityClose);
+                String tag = "";
+                if ((idxTagOpen > 0) && (idxTagClose > 0))
+                    tag = msg.substring(idxTagOpen + 1, idxTagClose);
+                String timestamp = msg.substring(0, idxSeverityOpen - 1);
+                String message = msg.substring(Math.max(idxSeverityClose, idxTagClose) + 2);
+                listener.onLog(SnapclientService.this, timestamp, severity, tag, message);
+
+                if ((message.equals("Init start")) && (restartRunnable == null)) {
+                    restartRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.d(TAG, "Runnable!");
+                            stopProcess();
+                            try {
+                                startProcess();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    };
+                    restartHandler.postDelayed(restartRunnable, 3000);
+                } else if ((message.contains("Init failed")) && (restartHandler != null)) {
+                    restartHandler.removeCallbacks(restartRunnable);
+                    restartHandler.post(restartRunnable);
+                } else if ((message.equals("Init done")) && (restartHandler != null)) {
+                    restartHandler.removeCallbacks(restartRunnable);
+                    restartRunnable = null;
+                }
             }
         }
     }
 
-    private void stop() {
+    private void stopProcess() {
         try {
             if (reader != null)
                 reader.interrupt();
             if (process != null)
                 process.destroy();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stop() {
+        try {
+            stopProcess();
             if ((wakeLock != null) && wakeLock.isHeld())
                 wakeLock.release();
             if ((wifiWakeLock != null) && wifiWakeLock.isHeld())
@@ -330,7 +381,7 @@ public class SnapclientService extends Service {
 
         void onPlayerStop(SnapclientService snapclientService);
 
-        void onLog(SnapclientService snapclientService, String timestamp, String logClass, String msg);
+        void onLog(SnapclientService snapclientService, String timestamp, String logClass, String tag, String msg);
 
         void onError(SnapclientService snapclientService, String msg, Exception exception);
     }
