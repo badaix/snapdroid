@@ -239,12 +239,12 @@ public class SnapclientService extends Service {
 
         String rate = null;
         String fpb = null;
-        String sampleformat = "*:16:2";
+        String sampleformat = "*:16:*";
         AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
             fpb = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-            sampleformat = rate + ":16:2";
+            sampleformat = rate + ":16:*";
         }
 
         ProcessBuilder pb = new ProcessBuilder()
