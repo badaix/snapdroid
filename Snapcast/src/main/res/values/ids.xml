@@ -3,4 +3,10 @@
     <item name="menu_details" type="id"/>
     <item name="menu_delete" type="id"/>
     <item name="menu_group" type="id"/>
+
+    <string-array name="audio_engine_array">
+        <item>Auto</item>
+        <item>OpenSL</item>
+        <item>Oboe</item>
+    </string-array>
 </resources>

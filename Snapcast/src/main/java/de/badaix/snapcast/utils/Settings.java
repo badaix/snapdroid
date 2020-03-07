@@ -123,8 +123,21 @@ public class Settings {
         return getBoolean("autoStart", false);
     }
 
+    public String getAudioEngine() {
+        return getString("audioEngine", "Auto");
+    }
+
+    public boolean doResample() {
+        return getBoolean("resample", true);
+    }
+
     public void setAutostart(boolean autoStart) {
         put("autoStart", autoStart);
+    }
+
+    public void setAudioEngine(String engine, boolean resample) {
+        put("audioEngine", engine);
+        put("resample", resample);
     }
 
     public void setHost(String host, int streamPort, int controlPort) {

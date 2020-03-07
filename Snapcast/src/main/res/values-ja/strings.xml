@@ -41,7 +41,7 @@
     <string name="host">ホスト</string>
     <string name="streaming_port">ストリーム ポート</string>
     <string name="control_port">コントロール ポート</string>
-    <string name="server_host">Snapserver ホスト</string>
+    <string name="settings">Snapserver ホスト</string>
     <string name="auto_start">Snapclient を自動開始</string>
 </resources>
 

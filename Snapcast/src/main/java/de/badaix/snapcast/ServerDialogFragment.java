@@ -29,11 +29,14 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Spinner;
 
 import de.badaix.snapcast.utils.NsdHelper;
+import de.badaix.snapcast.utils.Settings;
 
 /**
  * Created by johannes on 21.02.16.
@@ -46,6 +49,8 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
     private EditText editStreamPort;
     private EditText editControlPort;
     private CheckBox checkBoxAutoStart;
+    private CheckBox checkBoxResample;
+    private Spinner spinnerAudioEngine;
     private String host = "";
     private int streamPort = 1704;
     private int controlPort = 1705;
@@ -72,6 +77,14 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
         editStreamPort = (EditText) view.findViewById(R.id.stream_port);
         editControlPort = (EditText) view.findViewById(R.id.control_port);
         checkBoxAutoStart = (CheckBox) view.findViewById(R.id.checkBoxAutoStart);
+
+        spinnerAudioEngine = (Spinner) view.findViewById(R.id.audio_engine);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
+                R.array.audio_engine_array, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAudioEngine.setAdapter(adapter);
+        checkBoxResample = (CheckBox) view.findViewById(R.id.checkBoxResample);
+
         update();
 
         builder.setView(view)
@@ -91,6 +104,7 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
                             listener.onHostChanged(host, streamPort, controlPort);
                             listener.onAutoStartChanged(checkBoxAutoStart.isChecked());
                         }
+                        Settings.getInstance(getContext()).setAudioEngine(spinnerAudioEngine.getSelectedItem().toString(), checkBoxResample.isChecked());
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -98,7 +112,7 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
                         ServerDialogFragment.this.getDialog().cancel();
                     }
                 })
-                .setTitle(R.string.server_host)
+                .setTitle(R.string.settings)
                 .setCancelable(false);
         return builder.create();
     }
@@ -138,6 +152,13 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
                         editStreamPort.setText(Integer.toString(streamPort));
                         editControlPort.setText(Integer.toString(controlPort));
                         checkBoxAutoStart.setChecked(autoStart);
+                        for (int i = 0; i < spinnerAudioEngine.getCount(); ++i) {
+                            if (spinnerAudioEngine.getItemAtPosition(i).toString().equals(Settings.getInstance(getContext()).getAudioEngine())) {
+                                spinnerAudioEngine.setSelection(i);
+                                break;
+                            }
+                        }
+                        checkBoxResample.setChecked(Settings.getInstance(getContext()).doResample());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

@@ -91,6 +91,34 @@
 
         </TableRow>
 
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="3dip"
+                android:text="@string/audio_engine"
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+            <Spinner
+                android:id="@+id/audio_engine"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="7dp"/>
+
+        </TableRow>
+
+        <CheckBox
+            android:id="@+id/checkBoxResample"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dp"
+            android:layout_marginTop="3dp"
+            android:text="@string/resample_audio"
+            android:textAppearance="?android:attr/textAppearanceMedium"/>
+
         <CheckBox
             android:id="@+id/checkBoxAutoStart"
             android:layout_width="match_parent"

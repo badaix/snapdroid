@@ -47,7 +47,9 @@
     <string name="host">Host</string>
     <string name="streaming_port">stream port</string>
     <string name="control_port">control port</string>
-    <string name="server_host">Snapserver host</string>
+    <string name="settings">Settings</string>
+    <string name="audio_engine">audio engine</string>
+    <string name="resample_audio">resample audio stream</string>
     <string name="auto_start">Auto start Snapclient</string>
     <string name="connect">Connect</string>
 </resources>

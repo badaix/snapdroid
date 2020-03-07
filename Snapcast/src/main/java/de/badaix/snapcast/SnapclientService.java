@@ -44,6 +44,8 @@ import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.UUID;
 
+import de.badaix.snapcast.utils.Settings;
+
 import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 
 /**
@@ -158,6 +160,7 @@ public class SnapclientService extends Service {
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy");
         stop();
     }
 
@@ -167,53 +170,17 @@ public class SnapclientService extends Service {
     }
 
     public void stopPlayer() {
+        Log.d(TAG, "stopPlayer");
         stopService();
     }
 
     private void stopService() {
+        Log.d(TAG, "stopService");
         stop();
         stopForeground(true);
         NotificationManager mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(123);
-    }
-
-    /**
-     * Return pseudo unique ID
-     *
-     * @return ID
-     */
-    public static String getUniquePsuedoID() {
-        // If all else fails, if the user does have lower than API 9 (lower
-        // than Gingerbread), has reset their device or 'Secure.ANDROID_ID'
-        // returns 'null', then simply the ID returned will be solely based
-        // off their Android device information. This is where the collisions
-        // can happen.
-        // Thanks http://www.pocketmagic.net/?p=1662!
-        // Try not to use DISPLAY, HOST or ID - these items could change.
-        // If there are collisions, there will be overlapping data
-        String m_szDevIDShort = "35" + (Build.BOARD.length() % 10) + (Build.BRAND.length() % 10) + (Build.CPU_ABI.length() % 10) + (Build.DEVICE.length() % 10) + (Build.MANUFACTURER.length() % 10) + (Build.MODEL.length() % 10) + (Build.PRODUCT.length() % 10);
-
-        // Thanks to @Roman SL!
-        // https://stackoverflow.com/a/4789483/950427
-        // Only devices with API >= 9 have android.os.Build.SERIAL
-        // http://developer.android.com/reference/android/os/Build.html#SERIAL
-        // If a user upgrades software or roots their device, there will be a duplicate entry
-        String serial = null;
-        try {
-            serial = android.os.Build.class.getField("SERIAL").get(null).toString();
-
-            // Go ahead and return the serial for api => 9
-            return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
-        } catch (Exception exception) {
-            // String needs to be initialized
-            serial = "serial"; // some value
-        }
-
-        // Thanks @Joe!
-        // https://stackoverflow.com/a/2853253/950427
-        // Finally, combine the values we have found by using the UUID class to create a unique identifier
-        return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
     }
 
     public synchronized static String getUniqueId(Context context) {
@@ -232,20 +199,30 @@ public class SnapclientService extends Service {
     }
 
     private void startProcess() throws IOException {
+        Log.d(TAG, "startProcess");
         String player = "oboe";
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        String configuredEngine = Settings.getInstance(getApplicationContext()).getAudioEngine();
+        if (configuredEngine.equals("OpenSL"))
             player = "opensl";
+        else if (configuredEngine.equals("Oboe"))
+            player = "oboe";
+        else {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                player = "opensl";
+            else
+                player = "oboe";
         }
 
         String rate = null;
         String fpb = null;
         String sampleformat = "*:16:*";
         AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) && Settings.getInstance(getApplicationContext()).doResample()) {
             rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
             fpb = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
             sampleformat = rate + ":16:*";
         }
+        Log.i(TAG, "Configured engine: " + configuredEngine + ", active engine: " + player + ", sampleformat: " + sampleformat);
 
         ProcessBuilder pb = new ProcessBuilder()
                 .command(this.getApplicationInfo().nativeLibraryDir + "/libsnapclient.so", "-h", host, "-p", Integer.toString(port), "--hostID", getUniqueId(this.getApplicationContext()), "--player", player, "--sampleformat", sampleformat)
@@ -278,19 +255,19 @@ public class SnapclientService extends Service {
 
 
     private void start(String host, int port) {
+        Log.d(TAG, "start host: " + host + ", port: " + port);
         try {
             //https://code.google.com/p/android/issues/detail?id=22763
             if (running)
                 return;
-            File binary = new File(getFilesDir(), "snapclient");
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-            wakeLock = powerManager.newWakeLock(PARTIAL_WAKE_LOCK, "snapcast:SnapcastWakeLock");
+            wakeLock = powerManager.newWakeLock(PARTIAL_WAKE_LOCK, "snapcast:SnapcastPartialWakeLock");
             wakeLock.acquire();
 
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-            wifiWakeLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "SnapcastWifiWakeLock");
+            wifiWakeLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "snapcast:SnapcastWifiWakeLock");
             wifiWakeLock.acquire();
             this.host = host;
             this.port = port;
@@ -328,7 +305,7 @@ public class SnapclientService extends Service {
                     restartRunnable = new Runnable() {
                         @Override
                         public void run() {
-                            Log.d(TAG, "Runnable!");
+                            Log.i(TAG, "Restarting Snapclient");
                             stopProcess();
                             try {
                                 startProcess();
@@ -350,6 +327,7 @@ public class SnapclientService extends Service {
     }
 
     private void stopProcess() {
+        Log.d(TAG, "stopProcess");
         try {
             if (reader != null)
                 reader.interrupt();
@@ -361,6 +339,7 @@ public class SnapclientService extends Service {
     }
 
     private void stop() {
+        Log.d(TAG, "stop");
         try {
             stopProcess();
             if ((wakeLock != null) && wakeLock.isHeld())
