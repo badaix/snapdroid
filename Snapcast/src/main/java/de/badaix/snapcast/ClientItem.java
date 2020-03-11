@@ -65,7 +65,8 @@ public class ClientItem extends LinearLayout implements SeekBar.OnSeekBarChangeL
 
     public void update() {
         //Log.d(TAG, "update: " + client.getVisibleName() + ", connected: " + client.isConnected());
-        title.setText(client.getVisibleName());
+        if (!client.getVisibleName().equals(title.getText()))
+            title.setText(client.getVisibleName());
         title.setEnabled(client.isConnected());
         volumeSeekBar.setProgress(client.getConfig().getVolume().getPercent());
         if (client.getConfig().getVolume().isMuted())

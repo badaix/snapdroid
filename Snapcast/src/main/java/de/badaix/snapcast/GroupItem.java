@@ -41,7 +41,7 @@ import de.badaix.snapcast.control.json.Volume;
  */
 
 
-public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeListener, View.OnClickListener, ClientItem.ClientItemListener, View.OnTouchListener {
+public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeListener, View.OnClickListener, ClientItem.ClientItemListener, View.OnTouchListener, View.OnFocusChangeListener {
 
     private static final String TAG = "GroupItem";
 
@@ -79,6 +79,7 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         tvStreamName = (TextView) findViewById(R.id.tvStreamName);
         volumeSeekBar.setOnSeekBarChangeListener(this);
         volumeSeekBar.setOnTouchListener(this);
+        volumeSeekBar.setOnFocusChangeListener(this);
         this.server = server;
         clientItems = new Vector<>();
         clientVolumes = new Vector<>();
@@ -188,19 +189,30 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
             listener.onGroupVolumeChanged(this);
     }
 
+    private void updateClientVolumes() {
+        clientVolumes.clear();
+        for (int i = 0; i < clientItems.size(); ++i)
+            clientVolumes.add(clientItems.get(i).getClient().getConfig().getVolume().getPercent());
+        groupVolume = volumeSeekBar.getProgress();
+    }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            clientVolumes.clear();
-            for (int i = 0; i < clientItems.size(); ++i)
-                clientVolumes.add(clientItems.get(i).getClient().getConfig().getVolume().getPercent());
-            groupVolume = volumeSeekBar.getProgress();
+            updateClientVolumes();
             Log.d(TAG, "onTouch: " + groupVolume);
         }
         return false;
     }
 
+    @Override
+    public void onFocusChange(View view, boolean hasFocus) {
+        Log.d(TAG, "onFocusChange hasFocus: " + hasFocus);
+        if (hasFocus) {
+            updateClientVolumes();
+            Log.d(TAG, "onFocusChange: " + groupVolume);
+        }
+    }
 
     @Override
     public void onClick(View v) {
@@ -241,7 +253,6 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         if (listener != null)
             listener.onClientPropertiesClicked(this, clientItem);
     }
-
 
     public interface GroupItemListener {
         void onGroupVolumeChanged(GroupItem group);
