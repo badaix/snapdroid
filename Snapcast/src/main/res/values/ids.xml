@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="menu_details" type="id"/>
-    <item name="menu_delete" type="id"/>
-    <item name="menu_group" type="id"/>
+    <item name="menu_details" type="id" />
+    <item name="menu_delete" type="id" />
+    <item name="menu_group" type="id" />
 
     <string-array name="audio_engine_array">
         <item>Auto</item>

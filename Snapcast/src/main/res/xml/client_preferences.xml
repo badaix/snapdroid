@@ -3,45 +3,45 @@
     <EditTextPreference
         android:key="pref_client_name"
         android:summary="name"
-        android:title="@string/client_name"/>
+        android:title="@string/client_name" />
     <EditTextPreference
         android:inputType="numberSigned"
         android:key="pref_client_latency"
         android:summary="0ms"
-        android:title="@string/client_latency"/>
+        android:title="@string/client_latency" />
     <Preference
         android:enabled="false"
         android:key="pref_client_mac"
         android:summary="mac"
-        android:title="@string/client_mac"/>
+        android:title="@string/client_mac" />
     <Preference
         android:enabled="false"
         android:key="pref_client_id"
         android:summary="id"
-        android:title="@string/client_id"/>
+        android:title="@string/client_id" />
     <Preference
         android:enabled="false"
         android:key="pref_client_ip"
         android:summary="ip"
-        android:title="@string/client_ip"/>
+        android:title="@string/client_ip" />
     <Preference
         android:enabled="false"
         android:key="pref_client_host"
         android:summary="host"
-        android:title="@string/client_host"/>
+        android:title="@string/client_host" />
     <Preference
         android:enabled="false"
         android:key="pref_client_os"
         android:summary="operating system"
-        android:title="@string/client_os"/>
+        android:title="@string/client_os" />
     <Preference
         android:enabled="false"
         android:key="pref_client_version"
         android:summary="version"
-        android:title="@string/client_version"/>
+        android:title="@string/client_version" />
     <Preference
         android:enabled="false"
         android:key="pref_client_last_seen"
         android:summary="online"
-        android:title="@string/client_last_seen"/>
+        android:title="@string/client_last_seen" />
 </PreferenceScreen>
