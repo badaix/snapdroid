@@ -343,12 +343,16 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
     @Override
     public void onLog(SnapclientService snapclientService, String timestamp, String logClass, String tag, String msg) {
         Log.d(TAG, "[" + logClass + "] (" + tag + ") " + msg);
-        if ("Notice".equals(logClass)) {
-            /* if (msg.startsWith("sampleformat")) {
-                msg = msg.substring(msg.indexOf(":") + 2);
+        if ("Info".equals(logClass) && "Controller".equals(tag)) {
+            /* String key = "sampleformat: ";
+            if (msg.contains(key)) {
+                msg = msg.substring(msg.indexOf(key) + key.length());
+                if (msg.contains(","))
+                    msg = msg.substring(0, msg.indexOf(','));
                 Log.d(TAG, "sampleformat: " + msg);
                 if (msg.indexOf(':') > 0) {
                     int samplerate = Integer.valueOf(msg.substring(0, msg.indexOf(':')));
+                    Log.d(TAG, "samplerate: " + samplerate);
 
                     if (warningSamplerateSnackbar != null)
                         warningSamplerateSnackbar.dismiss();
