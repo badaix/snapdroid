@@ -124,11 +124,11 @@ public class Settings {
     }
 
     public String getAudioEngine() {
-        return getString("audioEngine", "Auto");
+        return "Auto"; // getString("audioEngine", "Auto");
     }
 
     public boolean doResample() {
-        return getBoolean("resample", true);
+        return true; // getBoolean("resample", true);
     }
 
     public void setAutostart(boolean autoStart) {
