@@ -32,6 +32,7 @@
 
     <string name="title_activity_group_preference">Group settings</string>
 
+    <string name="host_empty">Cannot connect: host is not configured</string>
     <string name="action_play_stop">Play/Stop</string>
     <string name="client_deleted">Client %1$s deleted</string>
     <string name="wrong_sample_rate">Stream not in native sample rate: %1$d\nNative sample rate: %2$d</string>

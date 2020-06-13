@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
     private SnapclientService snapclientService;
     private GroupListFragment groupListFragment;
     private Snackbar warningSamplerateSnackbar = null;
+    private Snackbar deleteSnackbar = null;
     private int nativeSampleRate = 0;
     private CoordinatorLayout coordinatorLayout;
     private Button btnConnect = null;
@@ -224,7 +225,11 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
             groupListFragment.setHideOffline(item.isChecked());
             return true;
         } else if (id == R.id.action_refresh) {
-            startRemoteControl();
+            if (host.trim().isEmpty()) {
+                showWarning(getString(R.string.host_empty));
+            } else {
+                startRemoteControl();
+            }
             remoteControl.getServerStatus();
         } else if (id == R.id.action_about) {
             Intent intent = new Intent(this, AboutActivity.class);
@@ -369,12 +374,16 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
                 }
             } */
         } else if ("err".equals(logClass) || "Emerg".equals(logClass) || "Alert".equals(logClass) || "Crit".equals(logClass) || "Err".equals(logClass) || "Error".equals(logClass)) {
-            if (warningSamplerateSnackbar != null)
-                warningSamplerateSnackbar.dismiss();
-            warningSamplerateSnackbar = Snackbar.make(findViewById(R.id.myCoordinatorLayout),
-                    msg, Snackbar.LENGTH_LONG);
-            warningSamplerateSnackbar.show();
+            showWarning(msg);
         }
+    }
+
+    private void showWarning(String msg) {
+        if (warningSamplerateSnackbar != null)
+            warningSamplerateSnackbar.dismiss();
+        warningSamplerateSnackbar = Snackbar.make(coordinatorLayout,
+                msg, Snackbar.LENGTH_LONG);
+        warningSamplerateSnackbar.show();
     }
 
     @Override
@@ -503,15 +512,19 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
 
     @Override
     public void onDeleteClicked(GroupItem groupItem, final ClientItem clientItem) {
+        if ((deleteSnackbar != null) && deleteSnackbar.isShown()) {
+            deleteSnackbar.dismiss();
+        }
+
         final Client client = clientItem.getClient();
         client.setDeleted(true);
 
         serverStatus.updateClient(client);
         groupListFragment.updateServer(serverStatus);
-        Snackbar mySnackbar = Snackbar.make(findViewById(R.id.myCoordinatorLayout),
+        deleteSnackbar = Snackbar.make(coordinatorLayout,
                 getString(R.string.client_deleted, client.getVisibleName()),
                 Snackbar.LENGTH_SHORT);
-        mySnackbar.setAction(R.string.undo_string, new View.OnClickListener() {
+        deleteSnackbar.setAction(R.string.undo_string, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 client.setDeleted(false);
@@ -519,18 +532,19 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
                 groupListFragment.updateServer(serverStatus);
             }
         });
-        mySnackbar.addCallback(new Snackbar.Callback() {
+        deleteSnackbar.addCallback(new Snackbar.Callback() {
+            boolean dismissed = false;
             @Override
             public void onDismissed(Snackbar snackbar, int event) {
                 super.onDismissed(snackbar, event);
-                if (event != DISMISS_EVENT_ACTION) {
+                if ((event != DISMISS_EVENT_ACTION) && !dismissed) {
                     remoteControl.delete(client);
                     serverStatus.removeClient(client);
+                    dismissed = true;
                 }
             }
         });
-        mySnackbar.show();
-
+        deleteSnackbar.show();
     }
 
     @Override

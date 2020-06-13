@@ -24,6 +24,7 @@ package de.badaix.snapcast.utils;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
@@ -125,8 +126,13 @@ public class NsdHelper {
             public void onServiceFound(NsdServiceInfo serviceInfo) {
                 NsdServiceInfo info = serviceInfo;
                 Log.d(TAG, "Service found: " + info.getServiceName());
-                if (info.getServiceName().startsWith(serviceName))
-                    mNsdManager.resolveService(info, mResolveListener);
+                if (info.getServiceName().startsWith(serviceName)) {
+                    try {
+                        mNsdManager.resolveService(info, mResolveListener);
+                    } catch (IllegalArgumentException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             @Override

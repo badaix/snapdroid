@@ -31,6 +31,7 @@
 
     <string name="title_activity_group_preference">Gruppe</string>
 
+    <string name="host_empty">Verbindung fehlgeschlagen: Host ist nicht konfiguriert</string>
     <string name="action_play_stop">Play/Stop</string>
     <string name="client_deleted">Client %1$s gelöscht</string>
     <string name="wrong_sample_rate">Stream ist nicht in nativer sample rate: %1$d\nNative sample rate: %2$d</string>
