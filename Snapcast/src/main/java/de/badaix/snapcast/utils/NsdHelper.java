@@ -24,7 +24,6 @@ package de.badaix.snapcast.utils;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
