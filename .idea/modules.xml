@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Snapcast/Snapcast.iml" filepath="$PROJECT_DIR$/Snapcast/Snapcast.iml" group="snapdroid/Snapcast" />
-      <module fileurl="file://$PROJECT_DIR$/snapdroid.iml" filepath="$PROJECT_DIR$/snapdroid.iml" group="snapdroid" />
+      <module fileurl="file://$PROJECT_DIR$/snapdroid.iml" filepath="$PROJECT_DIR$/snapdroid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.iml" filepath="$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.iml" />
     </modules>
   </component>
 </project>
