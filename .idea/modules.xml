@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/snapdroid.iml" filepath="$PROJECT_DIR$/snapdroid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/snapdroid.iml" filepath="$PROJECT_DIR$/.idea/modules/snapdroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.iml" filepath="$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.iml" />
     </modules>
   </component>

@@ -80,3 +80,5 @@ lint/tmp/
 # lint/reports/
 
 Snapcast/release/output.json
+
+Snapcast/.cxx
