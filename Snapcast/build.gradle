@@ -30,7 +30,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path 'src/main/snapcast/CMakeLists.txt'
+            path 'src/main/cpp/snapcast/CMakeLists.txt'
         }
     }
 
@@ -38,7 +38,7 @@ android {
         disable 'MissingTranslation'
     }
     buildToolsVersion = '30.0.2'
-    ndkVersion '22.0.6917172 rc1'
+    ndkVersion '21.3.6528147'
 }
 
 dependencies {
