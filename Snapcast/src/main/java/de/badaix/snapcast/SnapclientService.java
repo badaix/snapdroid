@@ -220,10 +220,12 @@ public class SnapclientService extends Service {
         String sampleformat = "*:16:*";
         AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
         // boolean bta2dp = audioManager.isBluetoothA2dpOn();
-        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) && Settings.getInstance(getApplicationContext()).doResample()) {
-            rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-            fpb = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-            sampleformat = rate + ":16:*";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            if (Settings.getInstance(getApplicationContext()).doResample()) {
+                rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+                fpb = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+                sampleformat = rate + ":16:*";
+            }
             // bta2dp = false;
             // for (AudioDeviceInfo deviceInfo : audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
             //     if (deviceInfo.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP) {
