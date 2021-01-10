@@ -26,6 +26,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.util.Log;
 
@@ -46,6 +47,7 @@ public class NsdHelper {
     private android.net.nsd.NsdManager.ResolveListener mResolveListener = null;
     private Context mContext;
     private NsdHelperListener listener = null;
+    private WifiManager.MulticastLock multicastLock = null;
 
     private NsdHelper(Context context) {
         mContext = context;
@@ -65,6 +67,15 @@ public class NsdHelper {
         this.listener = listener;
         this.serviceName = serviceName;
         this.serviceType = serviceType;
+
+        // https://stackoverflow.com/questions/53615125/nsdmanager-discovery-does-not-work-on-android-9
+        WifiManager wifi = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        if (wifi != null) {
+            multicastLock = wifi.createMulticastLock("multicastLock");
+            multicastLock.setReferenceCounted(true);
+            multicastLock.acquire();
+        }
+
         initializeResolveListener();
         initializeDiscoveryListener();
         mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
@@ -79,6 +90,10 @@ public class NsdHelper {
             } finally {
             }
             mDiscoveryListener = null;
+        }
+        if (multicastLock != null) {
+            multicastLock.release();
+            multicastLock = null;
         }
     }
 
