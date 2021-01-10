@@ -19,7 +19,6 @@
 package de.badaix.snapcast;
 
 import android.content.Context;
-import androidx.appcompat.widget.PopupMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,6 +27,8 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import androidx.appcompat.widget.PopupMenu;
 
 import de.badaix.snapcast.control.json.Client;
 import de.badaix.snapcast.control.json.Volume;
