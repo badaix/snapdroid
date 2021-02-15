@@ -61,6 +61,10 @@ dependencies {
 
 
 repositories{
+    flatDir{
+        dirs 'libs'
+    }
+
     maven {
         name = "GithubPackages"
         url = uri("https://maven.pkg.github.com/badaix/snapcast-deps")
