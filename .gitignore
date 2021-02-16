@@ -82,3 +82,4 @@ lint/tmp/
 Snapcast/release/output.json
 
 Snapcast/.cxx
+Snapcast/libs/*.aar
