@@ -36,8 +36,6 @@
     <string name="about">アプリについて</string>
 
     <string name="client_stream">ストリーム</string>
-    <string name="first_run_title">警告</string>
-    <string name="first_run_text">これはテストクライアントです。\n正式利用用途ではありません。</string>
     <string name="host">ホスト</string>
     <string name="streaming_port">ストリーム ポート</string>
     <string name="control_port">コントロール ポート</string>

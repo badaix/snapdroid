@@ -20,11 +20,8 @@ package de.badaix.snapcast;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -41,7 +38,6 @@ import android.view.WindowManager;
 import android.widget.Button;
 
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
@@ -145,27 +141,6 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
 
         setActionbarSubtitle("Host: no Snapserver found");
         serverStatus = new ServerStatus();
-    }
-
-    public void checkFirstRun() {
-        PackageInfo pInfo;
-        try {
-            pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-            final int verCode = pInfo.versionCode;
-            int lastRunVersion = Settings.getInstance(this).getInt("lastRunVersion", 0);
-            Log.d(TAG, "lastRunVersion: " + lastRunVersion + ", version: " + verCode);
-            if (lastRunVersion < verCode) {
-                // Place your dialog code here to display the dialog
-                new AlertDialog.Builder(this).setTitle(R.string.first_run_title).setMessage(R.string.first_run_text).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Settings.getInstance(MainActivity.this).put("lastRunVersion", verCode);
-                    }
-                }).setCancelable(true).show();
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -299,7 +274,6 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
     public void onResume() {
         super.onResume();
         startRemoteControl();
-        checkFirstRun();
     }
 
     @Override

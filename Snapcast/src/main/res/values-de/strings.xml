@@ -43,8 +43,6 @@
     <string name="action_bar_failed">ActionBar kann nicht erstellt werden</string>
 
     <string name="client_stream">Stream</string>
-    <string name="first_run_title">Warnung</string>
-    <string name="first_run_text">Dies ist ein Test-Client.\nNicht für den Produktiv-Einsatz vorgesehen.</string>
     <string name="host">Host</string>
     <string name="streaming_port">Stream-Port</string>
     <string name="control_port">Control-Port</string>
