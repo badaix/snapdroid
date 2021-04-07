@@ -33,7 +33,7 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".SnapclientService" />
+        <service android:name=".SnapclientService" android:exported="true" />
 
         <!-- android:theme="@style/Theme.AppCompat.Light.DialogWhenLarge" -->
         <activity
