@@ -18,7 +18,9 @@
 
 package de.badaix.snapcast;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -28,6 +30,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Vector;
 
 import de.badaix.snapcast.control.json.Client;
@@ -77,6 +80,12 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         llClient = (LinearLayout) findViewById(R.id.llClient);
         llClient.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         tvStreamName = (TextView) findViewById(R.id.tvStreamName);
+        tvStreamName.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                streamChoiceDialog();
+            }
+        });
         volumeSeekBar.setOnSeekBarChangeListener(this);
         volumeSeekBar.setOnTouchListener(this);
         volumeSeekBar.setOnFocusChangeListener(this);
@@ -254,6 +263,36 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
             listener.onClientPropertiesClicked(this, clientItem);
     }
 
+    private void streamChoiceDialog() {
+        final ArrayList<CharSequence> streamNames = new ArrayList<>();
+        final ArrayList<String> streamIds = new ArrayList<>();
+        int checkedStream = -1, index = 0;
+        for (Stream stream : server.getStreams()) {
+            streamNames.add(stream.getName());
+            streamIds.add(stream.getId());
+            if (group.getStreamId().equals(stream.getId())) checkedStream = index;
+            index++;
+        }
+        final CharSequence[] streamNamesArr = streamNames.toArray(new CharSequence[]{});
+        final String[] streamIdsArr = streamIds.toArray(new String[]{});
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
+        alertDialog.setTitle(getContext().getString(R.string.client_stream));
+        alertDialog.setCancelable(true);
+        alertDialog.setSingleChoiceItems(streamNamesArr, checkedStream, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String newStreamId = streamIdsArr[which];
+                if (!newStreamId.equals(group.getStreamId())) {
+                    listener.onGroupStreamChanged(group, newStreamId);
+                }
+                dialog.cancel();
+            }
+        });
+        AlertDialog alert = alertDialog.create();
+        alert.setCanceledOnTouchOutside(true);
+        alert.show();
+    }
+
     public interface GroupItemListener {
         void onGroupVolumeChanged(GroupItem group);
 
@@ -266,6 +305,8 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         void onClientPropertiesClicked(GroupItem group, ClientItem clientItem);
 
         void onPropertiesClicked(GroupItem group);
+
+        void onGroupStreamChanged(Group group, String streamId);
     }
 
 }

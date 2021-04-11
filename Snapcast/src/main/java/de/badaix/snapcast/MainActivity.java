@@ -482,6 +482,12 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
     }
 
     @Override
+    public void onGroupStreamChanged(Group group, String streamId) {
+        remoteControl.setStream(group, streamId);
+        onStreamChanged(RemoteControl.RPCEvent.response, group.getId(), streamId);
+    }
+
+    @Override
     public void onVolumeChanged(GroupItem groupItem, ClientItem clientItem, int percent, boolean mute) {
         remoteControl.setVolume(clientItem.getClient(), percent, mute);
     }
