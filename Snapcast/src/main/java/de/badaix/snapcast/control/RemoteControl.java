@@ -227,7 +227,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
 
     public void getServerStatus() {
         RPCRequest request = jsonRequest("Server.GetStatus", null);
-        tcpClient.sendMessage(request.toString());
+        if (isConnected())
+            tcpClient.sendMessage(request.toString());
     }
 
     public void setName(Client client, String name) {
@@ -236,7 +237,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
             params.put("id", client.getId());
             params.put("name", name);
             RPCRequest request = jsonRequest("Client.SetName", params);
-            tcpClient.sendMessage(request.toString());
+            if (isConnected())
+                tcpClient.sendMessage(request.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -248,7 +250,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
             params.put("id", client.getId());
             params.put("latency", latency);
             RPCRequest request = jsonRequest("Client.SetLatency", params);
-            tcpClient.sendMessage(request.toString());
+            if (isConnected())
+                tcpClient.sendMessage(request.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -267,7 +270,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
             params.put("id", groupId);
             params.put("clients", clients);
             RPCRequest request = jsonRequest("Group.SetClients", params);
-            tcpClient.sendMessage(request.toString());
+            if (isConnected())
+                tcpClient.sendMessage(request.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -279,7 +283,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
             params.put("id", groupId);
             params.put("stream_id", streamId);
             RPCRequest request = jsonRequest("Group.SetStream", params);
-            tcpClient.sendMessage(request.toString());
+            if (isConnected())
+                tcpClient.sendMessage(request.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -291,7 +296,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
             params.put("id", group.getId());
             params.put("mute", muted);
             RPCRequest request = jsonRequest("Group.SetMute", params);
-            tcpClient.sendMessage(request.toString());
+            if (isConnected())
+                tcpClient.sendMessage(request.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -305,7 +311,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
                 RPCRequest volumeRequest = getVolumeRequest(client, volume.getPercent(), volume.isMuted());
                 batch.put(volumeRequest.toJson());
             }
-            tcpClient.sendMessage(batch.toString());
+            if (isConnected())
+                tcpClient.sendMessage(batch.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -321,7 +328,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
 
     public void setVolume(Client client, int percent, boolean mute) {
         try {
-            tcpClient.sendMessage(getVolumeRequest(client, percent, mute).toString());
+            if (isConnected())
+                tcpClient.sendMessage(getVolumeRequest(client, percent, mute).toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -332,7 +340,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
             JSONObject params = new JSONObject();
             params.put("id", client.getId());
             RPCRequest request = jsonRequest("Server.DeleteClient", params);
-            tcpClient.sendMessage(request.toString());
+            if (isConnected())
+                tcpClient.sendMessage(request.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
