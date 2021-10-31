@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId "de.badaix.snapcast"
         minSdkVersion 16
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 2500
         versionName '0.25.0.0'
         multiDexEnabled true
@@ -14,7 +14,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++14"
-                arguments '-DANDROID_STL=c++_static', '-DBUILD_SERVER=OFF', '-BUILD_TESTS=OFF'
+                arguments '-DANDROID_STL=c++_static', '-DBUILD_SERVER=ON', '-BUILD_TESTS=OFF'
                 abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
             }
         }
@@ -38,18 +38,18 @@ android {
         disable 'MissingTranslation'
     }
     buildToolsVersion = '30.0.3'
-    ndkVersion '22.0.7026061'
+    ndkVersion '23.1.7779620'
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
     // https://dl.google.com/dl/android/maven2/index.html
-    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     // compile 'com.android.support:recyclerview-v7:23.1.1'
-    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'com.google.android.material:material:1.4.0'
     implementation 'com.github.badaix:oboe:1.5.0@aar'
     implementation 'com.github.badaix:boost:1.76.0@aar'
     implementation 'com.github.badaix:flac:1.3.3.3@aar'
