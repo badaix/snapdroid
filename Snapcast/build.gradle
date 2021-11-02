@@ -14,7 +14,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++14"
-                arguments '-DANDROID_STL=c++_static', '-DBUILD_SERVER=ON', '-BUILD_TESTS=OFF'
+                arguments '-DANDROID_STL=c++_static', '-DBUILD_SERVER=OFF', '-BUILD_TESTS=OFF'
                 abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
             }
         }
