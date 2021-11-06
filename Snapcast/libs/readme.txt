@@ -1,13 +1,14 @@
 If you want to use local AAR packages, and not download them from GithubPackages, 
 place them in this directory:
 
-- boost-1.76.0
-- flac-1.3.3.3
-- oboe-1.5.0
-- ogg-1.3.4
+- boost-1.77.0
+- flac-1.3.3
+- oboe-1.6.1
+- ogg-1.3.5
 - opus-1.1.2
-- soxr-0.1.3.2
+- soxr-0.1.3
 - tremor-1.0.0
+- vorbis-1.3.7
 
 you can download the aar files from here:
 https://github.com/badaix/snapcast-deps/releases/tag/v0.25.0
