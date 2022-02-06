@@ -18,6 +18,9 @@
 
 package de.badaix.snapcast;
 
+import static android.os.PowerManager.FULL_WAKE_LOCK;
+import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -47,9 +50,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import de.badaix.snapcast.utils.Settings;
-
-import static android.os.PowerManager.FULL_WAKE_LOCK;
-import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 
 /**
  * Created by johannes on 01.01.16.
@@ -122,7 +122,7 @@ public class SnapclientService extends Service {
 
             Intent stopIntent = new Intent(this, SnapclientService.class);
             stopIntent.setAction(ACTION_STOP);
-            PendingIntent piStop = PendingIntent.getService(this, 0, stopIntent, 0);
+            PendingIntent piStop = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE);
 
             NotificationCompat.Builder builder =
                     new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
@@ -148,7 +148,7 @@ public class SnapclientService extends Service {
             PendingIntent resultPendingIntent =
                     stackBuilder.getPendingIntent(
                             0,
-                            PendingIntent.FLAG_UPDATE_CURRENT
+                            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
                     );
             builder.setContentIntent(resultPendingIntent);
             // mId allows you to update the notification later on.
