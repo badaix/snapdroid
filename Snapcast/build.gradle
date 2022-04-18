@@ -34,8 +34,8 @@ android {
         }
     }
 
-    buildToolsVersion = '30.0.3'
-    ndkVersion '23.1.7779620'
+    buildToolsVersion = '32.0.0'
+    ndkVersion '24.0.8215888'
     lint {
         disable 'MissingTranslation'
     }
@@ -43,7 +43,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    testImplementation 'junit:junit:4.13.1'
+    testImplementation 'junit:junit:4.13.2'
     // https://dl.google.com/dl/android/maven2/index.html
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'androidx.cardview:cardview:1.0.0'
