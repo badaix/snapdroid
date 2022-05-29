@@ -15,7 +15,7 @@ jobs:
     - name: Download dependencies
       run: |
         LIBS_DIR="Snapcast/libs/"
-        wget https://github.com/badaix/snapcast-deps/releases/download/v0.26.0/boost-1.78.0.aar -P $LIBS_DIR
+        wget https://github.com/badaix/snapcast-deps/releases/download/v0.26.0/boost-1.79.0.aar -P $LIBS_DIR
         wget https://github.com/badaix/snapcast-deps/releases/download/v0.26.0/flac-1.3.3.aar -P $LIBS_DIR
         wget https://github.com/badaix/snapcast-deps/releases/download/v0.26.0/oboe-1.6.1.aar -P $LIBS_DIR
         wget https://github.com/badaix/snapcast-deps/releases/download/v0.26.0/ogg-1.3.5.aar -P $LIBS_DIR
