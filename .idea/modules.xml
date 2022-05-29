@@ -4,6 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/snapdroid.iml" filepath="$PROJECT_DIR$/.idea/modules/snapdroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.iml" filepath="$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/Snapcast/snapdroid.Snapcast.unitTest.iml" />
     </modules>
   </component>
 </project>
