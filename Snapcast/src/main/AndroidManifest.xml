@@ -29,10 +29,12 @@
         </activity>
 
         <receiver
-            android:name="de.badaix.snapcast.BootCompleteReceiver"
+            android:name="de.badaix.snapcast.BroadcastReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="de.badaix.snapcast.START_SERVICE" />
+                <action android:name="de.badaix.snapcast.STOP_SERVICE" />
             </intent-filter>
         </receiver>
 
