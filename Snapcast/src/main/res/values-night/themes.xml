@@ -1,0 +1,4 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Application theme for dark theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar" />
+</resources>
