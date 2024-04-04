@@ -25,7 +25,7 @@ jobs:
         wget https://github.com/badaix/snapcast-deps/releases/download/v0.27.0/vorbis-1.3.7.aar -P $LIBS_DIR
 
     - name: Build the app
-      run: ./gradlew build
+      run: JAVA_HOME=$JAVA_HOME_17_X64 ./gradlew build
 
     - name: rename apk
       run: mv /home/runner/work/snapdroid/snapdroid/Snapcast/build/outputs/apk/release/Snapcast-release-unsigned.apk /home/runner/work/snapdroid/snapdroid/Snapcast/build/outputs/apk/release/Snapcast.apk 
