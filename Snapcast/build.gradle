@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
 
     defaultConfig {
         applicationId "de.badaix.snapcast"
-        minSdkVersion 16
-        targetSdkVersion 32
+        minSdkVersion 21
+        targetSdkVersion 33
         versionCode 2700
         versionName '0.27.0.0'
         multiDexEnabled true
@@ -35,22 +35,23 @@ android {
         }
     }
 
-    buildToolsVersion = '33.0.0'
-    ndkVersion '25.1.8937393'
+    buildToolsVersion = '34.0.0'
+    ndkVersion '26.2.11394342'
     lint {
         disable 'MissingTranslation'
     }
+    namespace 'de.badaix.snapcast'
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
     // https://dl.google.com/dl/android/maven2/index.html
-    implementation 'androidx.appcompat:appcompat:1.6.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     // compile 'com.android.support:recyclerview-v7:23.1.1'
-    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'com.github.badaix:oboe:1.7.0@aar'
     implementation 'com.github.badaix:boost:1.81.0@aar'
     implementation 'com.github.badaix:flac:1.4.2@aar'

@@ -55,6 +55,7 @@ public class GroupSettingsActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         Intent intent = new Intent();
         intent.putExtra("group", groupSettingsFragment.getGroup().getId());
         if (groupSettingsFragment.didStreamChange())
