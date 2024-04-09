@@ -21,6 +21,8 @@ package de.badaix.snapcast.control.json;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 /**
  * Created by johannes on 06.01.16.
  */
@@ -84,8 +86,8 @@ public class Snapcast implements JsonSerialisable {
 
         Snapcast that = (Snapcast) o;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (version != null ? !version.equals(that.version) : that.version != null) return false;
+        if (!Objects.equals(name, that.name)) return false;
+        if (!Objects.equals(version, that.version)) return false;
         return (protocolVersion == that.protocolVersion);
     }
 

@@ -85,10 +85,7 @@ public class NsdHelper {
 
     public void stopListening() {
         if (mDiscoveryListener != null) {
-            try {
-                mNsdManager.stopServiceDiscovery(mDiscoveryListener);
-            } finally {
-            }
+            mNsdManager.stopServiceDiscovery(mDiscoveryListener);
             mDiscoveryListener = null;
         }
         if (multicastLock != null) {

@@ -49,15 +49,15 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
     private static final String TAG = "GroupItem";
 
     //    private TextView title;
-    private SeekBar volumeSeekBar;
-    private ImageButton ibMute;
-    private ImageButton ibSettings;
-    private LinearLayout llClient;
+    private final SeekBar volumeSeekBar;
+    private final ImageButton ibMute;
+    private final ImageButton ibSettings;
+    private final LinearLayout llClient;
     private Group group;
-    private ServerStatus server;
+    private final ServerStatus server;
     private TextView tvStreamName = null;
     private GroupItemListener listener = null;
-    private LinearLayout llVolume;
+    private final LinearLayout llVolume;
     private boolean hideOffline = false;
     private Vector<ClientItem> clientItems = null;
     private Vector<Integer> clientVolumes = null;

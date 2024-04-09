@@ -47,7 +47,7 @@ public class RemoteControl implements TcpClient.TcpClientListener {
 
     private TcpClient tcpClient;
     private long msgId;
-    private RemoteControlListener listener;
+    private final RemoteControlListener listener;
     private String host;
     private int port;
     private final HashMap<Long, String> pendingRequests;
@@ -352,7 +352,7 @@ public class RemoteControl implements TcpClient.TcpClientListener {
         disconnected("Client.OnDisconnect"),
         updated("Client.OnUpdate");
         //deleted("Client.OnDelete");
-        private String text;
+        private final String text;
 
         ClientEvent(String text) {
             this.text = text;

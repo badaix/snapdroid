@@ -21,6 +21,8 @@ package de.badaix.snapcast.control.json;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 /**
  * Created by johannes on 06.01.16.
  */
@@ -70,9 +72,9 @@ public class Stream implements JsonSerialisable {
 
         Stream stream = (Stream) o;
 
-        if (uri != null ? !uri.equals(stream.uri) : stream.uri != null) return false;
-        if (id != null ? !id.equals(stream.id) : stream.id != null) return false;
-        return !(status != null ? !status.equals(stream.status) : stream.status != null);
+        if (!Objects.equals(uri, stream.uri)) return false;
+        if (!Objects.equals(id, stream.id)) return false;
+        return !(!Objects.equals(status, stream.status));
     }
 
     @Override
@@ -122,7 +124,7 @@ public class Stream implements JsonSerialisable {
         playing("playing"),
         disabled("disabled");
 
-        private String status;
+        private final String status;
 
         Status(String status) {
             this.status = status;

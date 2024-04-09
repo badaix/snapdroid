@@ -28,6 +28,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 
 
 /**
@@ -39,7 +40,7 @@ public class Group implements JsonSerialisable, Comparable<Group> {
     private String id = "";
     private String streamId = "";
     private boolean muted = false;
-    private ArrayList<Client> clients = new ArrayList<Client>();
+    private final ArrayList<Client> clients = new ArrayList<Client>();
 
     public Group(JSONObject json) {
         fromJson(json);
@@ -185,12 +186,12 @@ public class Group implements JsonSerialisable, Comparable<Group> {
 
         Group group = (Group) o;
 
-        if (name != null ? !name.equals(group.name) : group.name != null) return false;
-        if (id != null ? !id.equals(group.id) : group.id != null) return false;
+        if (!Objects.equals(name, group.name)) return false;
+        if (!Objects.equals(id, group.id)) return false;
         if (muted != group.muted) return false;
-        if (streamId != null ? !streamId.equals(group.streamId) : group.streamId != null)
+        if (!Objects.equals(streamId, group.streamId))
             return false;
-        return clients != null ? clients.equals(group.clients) : group.clients == null;
+        return Objects.equals(clients, group.clients);
 
     }
 

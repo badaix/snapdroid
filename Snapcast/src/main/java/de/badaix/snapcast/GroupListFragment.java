@@ -69,7 +69,7 @@ public class GroupListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        Log.d(TAG, "onCreateView: " + this.toString());
+        Log.d(TAG, "onCreateView: " + this);
         View view = inflater.inflate(R.layout.fragment_group_list, container, false);
         ListView lvGroup = (ListView) view.findViewById(R.id.lvGroup);
         groupAdapter = new GroupAdapter(getContext(), groupItemListener);
@@ -90,7 +90,7 @@ public class GroupListFragment extends Fragment {
         if (context instanceof GroupItem.GroupItemListener) {
             groupItemListener = (GroupItem.GroupItemListener) context;
         } else {
-            throw new RuntimeException(context.toString()
+            throw new RuntimeException(context
                     + " must implement GroupItemListener");
         }
         updateGui();
@@ -115,8 +115,8 @@ public class GroupListFragment extends Fragment {
     }
 
     public class GroupAdapter extends ArrayAdapter<Group> {
-        private Context context;
-        private GroupItem.GroupItemListener listener;
+        private final Context context;
+        private final GroupItem.GroupItemListener listener;
         private boolean hideOffline = false;
         private ServerStatus serverStatus = new ServerStatus();
 

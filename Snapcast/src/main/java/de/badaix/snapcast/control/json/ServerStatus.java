@@ -29,8 +29,8 @@ import java.util.Collections;
  * Created by johannes on 06.01.16.
  */
 public class ServerStatus implements JsonSerialisable {
-    private ArrayList<Group> groups = new ArrayList<Group>();
-    private ArrayList<Stream> streams = new ArrayList<Stream>();
+    private final ArrayList<Group> groups = new ArrayList<Group>();
+    private final ArrayList<Stream> streams = new ArrayList<Stream>();
     private Server server = null;
 
     public ServerStatus(JSONObject json) {

@@ -48,7 +48,7 @@ public class TcpClient {
     private BufferedReader mBufferIn;
     private Thread readerThread = null;
     private Socket socket = null;
-    private BlockingQueue<String> messages = new LinkedBlockingQueue<>();
+    private final BlockingQueue<String> messages = new LinkedBlockingQueue<>();
 
     /**
      * Constructor of the class. OnMessagedReceived listens for the messages
@@ -136,8 +136,8 @@ public class TcpClient {
     }
 
     private class ReaderRunnable implements Runnable {
-        private String host;
-        private int port;
+        private final String host;
+        private final int port;
 
         ReaderRunnable(final String host, final int port) {
             this.host = host;
