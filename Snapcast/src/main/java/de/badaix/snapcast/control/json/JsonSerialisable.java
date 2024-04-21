@@ -24,7 +24,7 @@ import org.json.JSONObject;
  * Created by johannes on 08.01.16.
  */
 public interface JsonSerialisable {
-    void fromJson(JSONObject json);
+    public void fromJson(JSONObject json);
 
-    JSONObject toJson();
+    public JSONObject toJson();
 }

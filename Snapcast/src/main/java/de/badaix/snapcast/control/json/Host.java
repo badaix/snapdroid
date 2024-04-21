@@ -21,8 +21,6 @@ package de.badaix.snapcast.control.json;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
-
 /**
  * Created by johannes on 06.01.16.
  */
@@ -101,11 +99,11 @@ public class Host implements JsonSerialisable {
 
         Host that = (Host) o;
 
-        if (!Objects.equals(name, that.name)) return false;
-        if (!Objects.equals(mac, that.mac)) return false;
-        if (!Objects.equals(os, that.os)) return false;
-        if (!Objects.equals(arch, that.arch)) return false;
-        return !(!Objects.equals(ip, that.ip));
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (mac != null ? !mac.equals(that.mac) : that.mac != null) return false;
+        if (os != null ? !os.equals(that.os) : that.os != null) return false;
+        if (arch != null ? !arch.equals(that.arch) : that.arch != null) return false;
+        return !(ip != null ? !ip.equals(that.ip) : that.ip != null);
     }
 
     @Override

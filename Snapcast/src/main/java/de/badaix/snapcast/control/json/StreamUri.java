@@ -23,7 +23,6 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by johannes on 06.01.16.
@@ -86,13 +85,13 @@ public class StreamUri implements JsonSerialisable {
 
         StreamUri stream = (StreamUri) o;
 
-        if (!Objects.equals(raw, stream.raw)) return false;
-        if (!Objects.equals(scheme, stream.scheme)) return false;
-        if (!Objects.equals(host, stream.host)) return false;
-        if (!Objects.equals(path, stream.path)) return false;
-        if (!Objects.equals(fragment, stream.fragment))
+        if (raw != null ? !raw.equals(stream.raw) : stream.raw != null) return false;
+        if (scheme != null ? !scheme.equals(stream.scheme) : stream.scheme != null) return false;
+        if (host != null ? !host.equals(stream.host) : stream.host != null) return false;
+        if (path != null ? !path.equals(stream.path) : stream.path != null) return false;
+        if (fragment != null ? !fragment.equals(stream.fragment) : stream.fragment != null)
             return false;
-        return !(!Objects.equals(query, stream.query));
+        return !(query != null ? !query.equals(stream.query) : stream.query != null);
     }
 
     @Override

@@ -21,8 +21,6 @@ package de.badaix.snapcast.control.json;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
-
 /**
  * Created by johannes on 06.01.16.
  */
@@ -136,12 +134,12 @@ public class Client implements JsonSerialisable, Comparable<Client> {
 
         Client that = (Client) o;
 
-        if (!Objects.equals(host, that.host)) return false;
-        if (!Objects.equals(snapclient, that.snapclient))
+        if (host != null ? !host.equals(that.host) : that.host != null) return false;
+        if (snapclient != null ? !snapclient.equals(that.snapclient) : that.snapclient != null)
             return false;
-        if (!Objects.equals(config, that.config)) return false;
+        if (config != null ? !config.equals(that.config) : that.config != null) return false;
         if (connected != that.connected) return false;
-        if (!Objects.equals(clientId, that.clientId))
+        if (clientId != null ? !clientId.equals(that.clientId) : that.clientId != null)
             return false;
         return (deleted == that.deleted);
     }

@@ -37,10 +37,10 @@ public class ClientItem extends LinearLayout implements SeekBar.OnSeekBarChangeL
 
     private static final String TAG = "ClientItem";
 
-    private final TextView title;
-    private final SeekBar volumeSeekBar;
-    private final ImageButton ibMute;
-    private final ImageButton ibOverflow;
+    private TextView title;
+    private SeekBar volumeSeekBar;
+    private ImageButton ibMute;
+    private ImageButton ibOverflow;
     private Client client;
     private ClientItemListener listener = null;
 

@@ -21,8 +21,6 @@ package de.badaix.snapcast.control.json;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
-
 /**
  * Created by johannes on 02.03.16.
  */
@@ -87,8 +85,8 @@ public class Server implements JsonSerialisable {
 
         Server server = (Server) o;
 
-        if (!Objects.equals(host, server.host)) return false;
-        return Objects.equals(snapserver, server.snapserver);
+        if (host != null ? !host.equals(server.host) : server.host != null) return false;
+        return snapserver != null ? snapserver.equals(server.snapserver) : server.snapserver == null;
 
     }
 

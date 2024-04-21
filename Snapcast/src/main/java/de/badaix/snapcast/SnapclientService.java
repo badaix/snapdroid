@@ -72,11 +72,11 @@ public class SnapclientService extends Service {
     private java.lang.Process process = null;
     private PowerManager.WakeLock wakeLock = null;
     private WifiManager.WifiLock wifiWakeLock = null;
-    private final Thread reader = null;
+    private Thread reader = null;
     private boolean running = false;
     private SnapclientListener listener = null;
     private boolean logReceived;
-    private final Handler restartHandler = new Handler();
+    private Handler restartHandler = new Handler();
     private Runnable restartRunnable = null;
     private String host = null;
     private int port = 0;

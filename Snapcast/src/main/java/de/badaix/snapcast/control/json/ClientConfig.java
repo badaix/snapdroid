@@ -21,8 +21,6 @@ package de.badaix.snapcast.control.json;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
-
 /**
  * Created by johannes on 06.01.16.
  */
@@ -107,9 +105,9 @@ public class ClientConfig implements JsonSerialisable {
         ClientConfig that = (ClientConfig) o;
 
         if (latency != that.latency) return false;
-        if (!Objects.equals(name, that.name)) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
         if (instance != that.instance) return false;
-        return !(!Objects.equals(volume, that.volume));
+        return !(volume != null ? !volume.equals(that.volume) : that.volume != null);
 
     }
 
