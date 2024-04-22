@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 /**
@@ -41,6 +42,17 @@ public class ClientSettingsActivity extends AppCompatActivity {
         getFragmentManager().beginTransaction()
                 .replace(android.R.id.content, clientSettingsFragment)
                 .commit();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent();
+                intent.putExtra("client", clientSettingsFragment.getClient().toJson().toString());
+                intent.putExtra("clientOriginal", clientSettingsFragment.getOriginalClientInfo().toJson().toString());
+                setResult(Activity.RESULT_OK, intent);
+                finish();
+            }
+        });
     }
 
     @Override
@@ -50,15 +62,5 @@ public class ClientSettingsActivity extends AppCompatActivity {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        Intent intent = new Intent();
-        intent.putExtra("client", clientSettingsFragment.getClient().toJson().toString());
-        intent.putExtra("clientOriginal", clientSettingsFragment.getOriginalClientInfo().toJson().toString());
-        setResult(Activity.RESULT_OK, intent);
-        finish();
     }
 }

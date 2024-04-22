@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 /**
@@ -42,6 +43,20 @@ public class GroupSettingsActivity extends AppCompatActivity {
         // Display the fragment as the main content.
         getFragmentManager().beginTransaction()
                 .replace(android.R.id.content, groupSettingsFragment).commit();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent();
+                intent.putExtra("group", groupSettingsFragment.getGroup().getId());
+                if (groupSettingsFragment.didStreamChange())
+                    intent.putExtra("stream", groupSettingsFragment.getStream());
+                if (groupSettingsFragment.didClientsChange())
+                    intent.putStringArrayListExtra("clients", groupSettingsFragment.getClients());
+                setResult(Activity.RESULT_OK, intent);
+                finish();
+            }
+        });
     }
 
     @Override
@@ -51,19 +66,6 @@ public class GroupSettingsActivity extends AppCompatActivity {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        Intent intent = new Intent();
-        intent.putExtra("group", groupSettingsFragment.getGroup().getId());
-        if (groupSettingsFragment.didStreamChange())
-            intent.putExtra("stream", groupSettingsFragment.getStream());
-        if (groupSettingsFragment.didClientsChange())
-            intent.putStringArrayListExtra("clients", groupSettingsFragment.getClients());
-        setResult(Activity.RESULT_OK, intent);
-        finish();
     }
 }
 
