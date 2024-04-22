@@ -53,12 +53,12 @@ public class ClientItem extends LinearLayout implements SeekBar.OnSeekBarChangeL
         LayoutInflater vi = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         vi.inflate(R.layout.client_item, this);
-        title = (TextView) findViewById(R.id.title);
-        volumeSeekBar = (SeekBar) findViewById(R.id.volumeSeekBar);
-        ibMute = (ImageButton) findViewById(R.id.ibMute);
+        title = findViewById(R.id.title);
+        volumeSeekBar = findViewById(R.id.volumeSeekBar);
+        ibMute = findViewById(R.id.ibMute);
         ibMute.setImageResource(R.drawable.ic_speaker_icon);
         ibMute.setOnClickListener(this);
-        ibOverflow = (ImageButton) findViewById(R.id.ibOverflow);
+        ibOverflow = findViewById(R.id.ibOverflow);
         ibOverflow.setOnClickListener(this);
         volumeSeekBar.setOnSeekBarChangeListener(this);
         setClient(client);

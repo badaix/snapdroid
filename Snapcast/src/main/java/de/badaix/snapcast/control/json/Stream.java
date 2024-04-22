@@ -74,7 +74,7 @@ public class Stream implements JsonSerialisable {
 
         if (!Objects.equals(uri, stream.uri)) return false;
         if (!Objects.equals(id, stream.id)) return false;
-        return !(!Objects.equals(status, stream.status));
+        return Objects.equals(status, stream.status);
     }
 
     @Override

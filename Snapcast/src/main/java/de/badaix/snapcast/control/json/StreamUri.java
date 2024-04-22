@@ -92,7 +92,7 @@ public class StreamUri implements JsonSerialisable {
         if (!Objects.equals(path, stream.path)) return false;
         if (!Objects.equals(fragment, stream.fragment))
             return false;
-        return !(!Objects.equals(query, stream.query));
+        return Objects.equals(query, stream.query);
     }
 
     @Override

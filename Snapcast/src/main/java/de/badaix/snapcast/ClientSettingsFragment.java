@@ -71,13 +71,13 @@ public class ClientSettingsFragment extends PreferenceFragment {
             }
         });
 
-        prefMac = (Preference) findPreference("pref_client_mac");
-        prefId = (Preference) findPreference("pref_client_id");
-        prefIp = (Preference) findPreference("pref_client_ip");
-        prefHost = (Preference) findPreference("pref_client_host");
-        prefOS = (Preference) findPreference("pref_client_os");
-        prefVersion = (Preference) findPreference("pref_client_version");
-        prefLastSeen = (Preference) findPreference("pref_client_last_seen");
+        prefMac = findPreference("pref_client_mac");
+        prefId = findPreference("pref_client_id");
+        prefIp = findPreference("pref_client_ip");
+        prefHost = findPreference("pref_client_host");
+        prefOS = findPreference("pref_client_os");
+        prefVersion = findPreference("pref_client_version");
+        prefLastSeen = findPreference("pref_client_last_seen");
         prefLatency = (EditTextPreference) findPreference("pref_client_latency");
         prefLatency.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override

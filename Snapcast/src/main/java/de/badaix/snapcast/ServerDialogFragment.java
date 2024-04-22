@@ -71,20 +71,20 @@ public class ServerDialogFragment extends DialogFragment implements View.OnClick
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
         View view = inflater.inflate(R.layout.dialog_server, null);
-        btnScan = (Button) view.findViewById(R.id.btn_scan);
+        btnScan = view.findViewById(R.id.btn_scan);
         btnScan.setOnClickListener(this);
 
-        editHost = (EditText) view.findViewById(R.id.host);
-        editStreamPort = (EditText) view.findViewById(R.id.stream_port);
-        editControlPort = (EditText) view.findViewById(R.id.control_port);
-        checkBoxAutoStart = (CheckBox) view.findViewById(R.id.checkBoxAutoStart);
+        editHost = view.findViewById(R.id.host);
+        editStreamPort = view.findViewById(R.id.stream_port);
+        editControlPort = view.findViewById(R.id.control_port);
+        checkBoxAutoStart = view.findViewById(R.id.checkBoxAutoStart);
 
-        spinnerAudioEngine = (Spinner) view.findViewById(R.id.audio_engine);
+        spinnerAudioEngine = view.findViewById(R.id.audio_engine);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
                 R.array.audio_engine_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerAudioEngine.setAdapter(adapter);
-        checkBoxResample = (CheckBox) view.findViewById(R.id.checkBoxResample);
+        checkBoxResample = view.findViewById(R.id.checkBoxResample);
 
         update();
 

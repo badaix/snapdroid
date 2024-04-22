@@ -156,11 +156,11 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
 //            tvInfo.setText("Sample rate: " + rate + ", buffer size: " + size);
         }
 
-        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.myCoordinatorLayout);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        coordinatorLayout = findViewById(R.id.myCoordinatorLayout);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        btnConnect = (Button) findViewById(R.id.btnConnect);
+        btnConnect = findViewById(R.id.btnConnect);
         btnConnect.setVisibility(View.GONE);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.

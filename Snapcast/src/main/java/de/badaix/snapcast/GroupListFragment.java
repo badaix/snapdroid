@@ -71,7 +71,7 @@ public class GroupListFragment extends Fragment {
         // Inflate the layout for this fragment
         Log.d(TAG, "onCreateView: " + this);
         View view = inflater.inflate(R.layout.fragment_group_list, container, false);
-        ListView lvGroup = (ListView) view.findViewById(R.id.lvGroup);
+        ListView lvGroup = view.findViewById(R.id.lvGroup);
         groupAdapter = new GroupAdapter(getContext(), groupItemListener);
         groupAdapter.setHideOffline(hideOffline);
         groupAdapter.updateServer(serverStatus);

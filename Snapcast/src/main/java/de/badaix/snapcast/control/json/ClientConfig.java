@@ -109,7 +109,7 @@ public class ClientConfig implements JsonSerialisable {
         if (latency != that.latency) return false;
         if (!Objects.equals(name, that.name)) return false;
         if (instance != that.instance) return false;
-        return !(!Objects.equals(volume, that.volume));
+        return Objects.equals(volume, that.volume);
 
     }
 

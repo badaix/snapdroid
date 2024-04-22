@@ -105,7 +105,7 @@ public class Host implements JsonSerialisable {
         if (!Objects.equals(mac, that.mac)) return false;
         if (!Objects.equals(os, that.os)) return false;
         if (!Objects.equals(arch, that.arch)) return false;
-        return !(!Objects.equals(ip, that.ip));
+        return Objects.equals(ip, that.ip);
     }
 
     @Override

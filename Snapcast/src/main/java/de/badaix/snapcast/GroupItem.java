@@ -69,17 +69,17 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         vi.inflate(R.layout.group_item, this);
 //        title = (TextView) findViewById(R.id.title);
-        volumeSeekBar = (SeekBar) findViewById(R.id.volumeSeekBar);
-        ibMute = (ImageButton) findViewById(R.id.ibMute);
+        volumeSeekBar = findViewById(R.id.volumeSeekBar);
+        ibMute = findViewById(R.id.ibMute);
         ibMute.setImageResource(R.drawable.ic_speaker_icon);
         ibMute.setOnClickListener(this);
-        ibSettings = (ImageButton) findViewById(R.id.ibSettings);
+        ibSettings = findViewById(R.id.ibSettings);
         ibSettings.setOnClickListener(this);
-        llVolume = (LinearLayout) findViewById(R.id.llVolume);
+        llVolume = findViewById(R.id.llVolume);
         llVolume.setVisibility(GONE);
-        llClient = (LinearLayout) findViewById(R.id.llClient);
+        llClient = findViewById(R.id.llClient);
         llClient.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        tvStreamName = (TextView) findViewById(R.id.tvStreamName);
+        tvStreamName = findViewById(R.id.tvStreamName);
         tvStreamName.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
