@@ -104,9 +104,10 @@ public class NsdHelper {
             @Override
             public void onServiceResolved(NsdServiceInfo serviceInfo) {
                 NsdServiceInfo info = serviceInfo;
+                Log.i(TAG, "onServiceResolved, canonical host name: " + info.getHost().getCanonicalHostName());
                 // sometimes it returns an IPv6 address...
-                if (!info.getHost().getCanonicalHostName().contains(":"))
-                    listener.onResolved(NsdHelper.this, serviceInfo);
+                // if (!info.getHost().getCanonicalHostName().contains(":"))
+                listener.onResolved(NsdHelper.this, serviceInfo);
             }
         };
     }
@@ -115,22 +116,22 @@ public class NsdHelper {
         mDiscoveryListener = new NsdManager.DiscoveryListener() {
             @Override
             public void onStartDiscoveryFailed(String serviceType, int errorCode) {
-                Log.d(TAG, "Discovery failed");
+                Log.e(TAG, "Discovery failed, error code: " + errorCode);
             }
 
             @Override
             public void onStopDiscoveryFailed(String serviceType, int errorCode) {
-                Log.d(TAG, "Stopping discovery failed");
+                Log.e(TAG, "Stopping discovery failed, error code: " + errorCode);
             }
 
             @Override
             public void onDiscoveryStarted(String serviceType) {
-                Log.d(TAG, "Discovery started");
+                Log.i(TAG, "Discovery started, service tyoe: " + serviceType);
             }
 
             @Override
             public void onDiscoveryStopped(String serviceType) {
-                Log.d(TAG, "Discovery stopped");
+                Log.i(TAG, "Discovery stopped, service type: " + serviceType);
             }
 
             @Override
