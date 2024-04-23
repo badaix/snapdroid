@@ -56,7 +56,7 @@ public class ClientItem extends LinearLayout implements SeekBar.OnSeekBarChangeL
         title = findViewById(R.id.title);
         volumeSeekBar = findViewById(R.id.volumeSeekBar);
         ibMute = findViewById(R.id.ibMute);
-        ibMute.setImageResource(R.drawable.ic_speaker_icon);
+        ibMute.setImageResource(R.drawable.volume_up_24px);
         ibMute.setOnClickListener(this);
         ibOverflow = findViewById(R.id.ibOverflow);
         ibOverflow.setOnClickListener(this);
@@ -71,9 +71,9 @@ public class ClientItem extends LinearLayout implements SeekBar.OnSeekBarChangeL
         title.setEnabled(client.isConnected());
         volumeSeekBar.setProgress(client.getConfig().getVolume().getPercent());
         if (client.getConfig().getVolume().isMuted())
-            ibMute.setImageResource(R.drawable.ic_mute_icon);
+            ibMute.setImageResource(R.drawable.volume_off_24px);
         else
-            ibMute.setImageResource(R.drawable.ic_speaker_icon);
+            ibMute.setImageResource(R.drawable.volume_up_24px);
     }
 
     public Client getClient() {

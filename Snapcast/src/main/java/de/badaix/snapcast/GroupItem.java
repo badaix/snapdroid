@@ -71,7 +71,7 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
 //        title = (TextView) findViewById(R.id.title);
         volumeSeekBar = findViewById(R.id.volumeSeekBar);
         ibMute = findViewById(R.id.ibMute);
-        ibMute.setImageResource(R.drawable.ic_speaker_icon);
+        ibMute.setImageResource(R.drawable.volume_up_24px);
         ibMute.setOnClickListener(this);
         ibSettings = findViewById(R.id.ibSettings);
         ibSettings.setOnClickListener(this);
@@ -110,9 +110,9 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         }
 
         if (group.isMuted())
-            ibMute.setImageResource(R.drawable.ic_mute_icon);
+            ibMute.setImageResource(R.drawable.volume_off_24px);
         else
-            ibMute.setImageResource(R.drawable.ic_speaker_icon);
+            ibMute.setImageResource(R.drawable.volume_up_24px);
 
         if ((clientItems.size() >= 2) || ((clientItems.size() == 1) && group.isMuted()))
             llVolume.setVisibility(VISIBLE);
