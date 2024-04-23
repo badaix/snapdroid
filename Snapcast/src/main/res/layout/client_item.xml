@@ -19,6 +19,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginVertical="3dp"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ImageButton
@@ -44,9 +45,9 @@
             android:layout_height="wrap_content"
             android:singleLine="true"
             android:fadingEdge="horizontal"
-            android:paddingBottom="1dp"
+            android:paddingBottom="3dp"
             android:paddingLeft="5dp"
-            android:paddingTop="2dp"
+            android:paddingTop="3dp"
             android:text="Title"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
