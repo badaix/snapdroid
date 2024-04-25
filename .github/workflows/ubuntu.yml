@@ -30,7 +30,7 @@ jobs:
     - name: rename apk
       run: mv /home/runner/work/snapdroid/snapdroid/Snapcast/build/outputs/apk/release/Snapcast-release-unsigned.apk /home/runner/work/snapdroid/snapdroid/Snapcast/build/outputs/apk/release/Snapcast.apk 
 
-    - uses: r0adkll/sign-android-release@v1
+    - uses: filippoLeporati93/android-release-signer@v1
       if: github.event_name == 'push'
       name: Sign app APK
       # ID used to access action output
