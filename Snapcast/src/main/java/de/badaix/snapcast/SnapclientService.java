@@ -223,9 +223,12 @@ public class SnapclientService extends Service {
         // boolean bta2dp = audioManager.isBluetoothA2dpOn();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             if (Settings.getInstance(getApplicationContext()).doResample()) {
+                // Query the AudioManager for the native sample rate and let Snapclient to the
+                // resampling using soxr's "high quality" configuration.
+                // This will result in better latency estimation and thus better audio sync.
                 rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
                 fpb = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-                sampleformat = rate + ":16:*";
+                sampleformat = rate + ":*:*";
             }
             // bta2dp = false;
             // for (AudioDeviceInfo deviceInfo : audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
