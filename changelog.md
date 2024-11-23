@@ -1,3 +1,18 @@
+# Version 0.29.0.0
+
+## Features
+
+- Update [Snapclient](https://github.com/badaix/snapcast) binary to [v0.29.0](https://github.com/badaix/snapcast/releases/tag/v0.29.0)
+- Android TV app launcher (PR #67)
+- Play audio with the original bit depth w/o resampling to 16 bit
+
+## General
+
+- CI: switch to new android-release-signer action (PR #66)
+- Snapclient: Update external libraries
+
+_Johannes Pohl <snapcast@badaix.de>  Sun, 24 Nov 2024 00:13:37 +0200_
+
 # Version 0.28.0.2
 
 ## Bugfixes
