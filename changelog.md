@@ -1,6 +1,6 @@
 # Version 0.29.0.1
 
-## Bugfix
+## Bugfixes
 
 - Change Target SDK version to 34 to workaround rendering issues
 
