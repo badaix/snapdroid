@@ -1,3 +1,11 @@
+# Version 0.29.0.1
+
+## Bugfix
+
+- Change Target SDK version to 34 to workaround rendering issues
+
+_Johannes Pohl <snapcast@badaix.de>  Sun, 24 Nov 2024 00:13:37 +0200_
+
 # Version 0.29.0.0
 
 ## Features
@@ -11,7 +19,7 @@
 - CI: switch to new android-release-signer action (PR #66)
 - Snapclient: Update external libraries
 
-_Johannes Pohl <snapcast@badaix.de>  Sun, 24 Nov 2024 00:13:37 +0200_
+_Johannes Pohl <snapcast@badaix.de>  Sat, 23 Nov 2024 00:13:37 +0200_
 
 # Version 0.28.0.2
 
