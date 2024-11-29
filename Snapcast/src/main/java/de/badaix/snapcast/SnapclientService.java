@@ -210,7 +210,7 @@ public class SnapclientService extends Service {
         else if (configuredEngine.equals("Oboe"))
             player = "oboe";
         else {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN)
                 player = "opensl";
             else
                 player = "oboe";

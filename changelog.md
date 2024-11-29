@@ -1,3 +1,11 @@
+# Version 0.29.0.2
+
+## Bugfixes
+
+- Use Oboe player for API level 16+ (was OpenSL for 16+ and Oboe for 26+)
+
+_Johannes Pohl <snapcast@badaix.de>  Sun, 24 Nov 2024 00:13:37 +0200_
+
 # Version 0.29.0.1
 
 ## Bugfixes
