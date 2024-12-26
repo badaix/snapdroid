@@ -7,8 +7,8 @@ android {
         applicationId "de.badaix.snapcast"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 2902
-        versionName '0.29.0.2'
+        versionCode 2903
+        versionName '0.29.0.3'
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
         externalNativeBuild {

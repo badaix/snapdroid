@@ -1,3 +1,11 @@
+# Version 0.29.0.3
+
+## General
+
+- Remove `LEANBACK_LAUNCHER` intent filter, to avoid the PlayStore error: `Die App wurde als APK veröffentlicht, das den Fernseher unterstützt. Sie enthält also <category android:name="android.intent.category.LEANBACK_LAUNCHER"/> in einem der Intent-Filter der Hauptaktivität. Sie muss stattdessen als App-Bundle veröffentlicht werden.`
+
+_Johannes Pohl <snapcast@badaix.de>  Thu, 26 Dec 2024 00:13:37 +0200_
+
 # Version 0.29.0.2
 
 ## Bugfixes
