@@ -231,6 +231,15 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
             Settings.getInstance(this).put("hide_offline", item.isChecked());
             groupListFragment.setHideOffline(item.isChecked());
             return true;
+        } else if (id == R.id.action_prevent_screen_off) {
+            item.setChecked(!item.isChecked());
+            Settings.getInstance(this).put("prevent_screen_off", item.isChecked());
+            // Update the wake lock setting in the SnapclientService
+            if (snapclientService != null) {
+                boolean fullWakeLock = item.isChecked();  // true = FULL_WAKE_LOCK, false = PARTIAL_WAKE_LOCK
+                snapclientService.updateWakeLock(fullWakeLock);
+            }
+            return true; 
         } else if (id == R.id.action_refresh) {
             if (host.trim().isEmpty()) {
                 showWarning(getString(R.string.host_empty));
@@ -242,7 +251,6 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
             Intent intent = new Intent(this, AboutActivity.class);
             startActivity(intent);
         }
-
         return super.onOptionsItemSelected(item);
     }
 

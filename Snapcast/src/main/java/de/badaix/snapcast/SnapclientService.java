@@ -280,15 +280,17 @@ public class SnapclientService extends Service {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            boolean preventScreenOff = Settings.getInstance(getApplicationContext()).getBoolean("prevent_screen_off", false);
 
-            UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
-            if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-                Log.d(TAG, "Running on a TV Device");
+            // Set the wake lock type based on the setting
+            if (preventScreenOff) {
+                Log.d(TAG, "Using FULL_WAKE_LOCK due to setting");
                 wakeLock = powerManager.newWakeLock(FULL_WAKE_LOCK, "snapcast:SnapcastFullWakeLock");
             } else {
-                Log.d(TAG, "Running on a non-TV Device");
+                Log.d(TAG, "Using PARTIAL_WAKE_LOCK due to setting");
                 wakeLock = powerManager.newWakeLock(PARTIAL_WAKE_LOCK, "snapcast:SnapcastPartialWakeLock");
             }
+            wakeLock = powerManager.newWakeLock(PARTIAL_WAKE_LOCK, "snapcast:SnapcastPartialWakeLock");
 
             wakeLock.acquire();
 
@@ -379,6 +381,27 @@ public class SnapclientService extends Service {
         }
         if (listener != null)
             listener.onPlayerStop(this);
+    }
+
+    public void updateWakeLock(boolean useFullWakeLock) {
+        try {
+            if (wakeLock != null && wakeLock.isHeld()) {
+                wakeLock.release();
+            }
+
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            if (useFullWakeLock) {
+                Log.d(TAG, "Switching to FULL_WAKE_LOCK");
+                wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "snapcast:SnapcastFullWakeLock");
+            } else {
+                Log.d(TAG, "Switching to PARTIAL_WAKE_LOCK");
+                wakeLock = powerManager.newWakeLock(PARTIAL_WAKE_LOCK, "snapcast:SnapcastPartialWakeLock");
+            }
+
+            wakeLock.acquire();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public interface SnapclientListener {

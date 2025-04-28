@@ -37,4 +37,10 @@
         android:orderInCategory="100"
         android:title="@string/action_hide_offline"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_prevent_screen_off"
+        android:checkable="true"
+        android:orderInCategory="100"
+        android:title="@string/action_prevent_screen_off"
+        app:showAsAction="never" />
 </menu>
