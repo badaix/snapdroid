@@ -127,16 +127,19 @@ public class ClientItem extends LinearLayout implements SeekBar.OnSeekBarChangeL
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_details:
-                listener.onPropertiesClicked(this);
-                return true;
-            case R.id.menu_delete:
-                listener.onDeleteClicked(this);
-                return true;
-            default:
-                return false;
+        int id = item.getItemId();
+
+        if (id == R.id.menu_details) {
+            listener.onPropertiesClicked(this);
+            return true;
         }
+
+        if (id == R.id.menu_delete) {
+            listener.onDeleteClicked(this);
+            return true;
+        }
+
+        return false;
     }
 
     public interface ClientItemListener {
