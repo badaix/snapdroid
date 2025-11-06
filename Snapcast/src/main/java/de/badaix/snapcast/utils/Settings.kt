@@ -22,73 +22,74 @@ import android.content.SharedPreferences
 import android.content.res.Resources
 import android.preference.PreferenceManager
 import androidx.core.content.edit
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
 /**
  * Created by johannes on 21.02.16.
  */
-class Settings {
-    var context: Context? = null
-        private set
+class Settings @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    val resources: Resources
+        get() = context.resources
 
-    val resources: Resources?
-        get() = context!!.resources
-
-    val prefs: SharedPreferences?
-        get() = PreferenceManager.getDefaultSharedPreferences(this.context)
+    val prefs: SharedPreferences
+        get() = PreferenceManager.getDefaultSharedPreferences(context)
 
     fun put(key: String?, value: String?): Settings {
-        this.prefs!!.edit {
+        prefs.edit {
             putString(key, value)
         }
         return this
     }
 
     fun put(key: String?, value: Boolean): Settings {
-        this.prefs!!.edit {
+        this.prefs.edit {
             putBoolean(key, value)
         }
         return this
     }
 
     fun put(key: String?, value: Float): Settings {
-        this.prefs!!.edit {
+        this.prefs.edit {
             putFloat(key, value)
         }
         return this
     }
 
     fun put(key: String?, value: Int): Settings {
-        this.prefs!!.edit {
+        this.prefs.edit {
             putInt(key, value)
         }
         return this
     }
 
     fun put(key: String?, value: Long): Settings {
-        this.prefs!!.edit {
+        this.prefs.edit {
             putLong(key, value)
         }
         return this
     }
 
     fun getString(key: String?, defaultValue: String?): String? {
-        return this.prefs!!.getString(key, defaultValue)
+        return this.prefs.getString(key, defaultValue)
     }
 
     fun getBoolean(key: String?, defaultValue: Boolean): Boolean {
-        return this.prefs!!.getBoolean(key, defaultValue)
+        return this.prefs.getBoolean(key, defaultValue)
     }
 
     fun getFloat(key: String?, defaultValue: Float): Float {
-        return this.prefs!!.getFloat(key, defaultValue)
+        return this.prefs.getFloat(key, defaultValue)
     }
 
     fun getInt(key: String?, defaultValue: Int): Int {
-        return this.prefs!!.getInt(key, defaultValue)
+        return this.prefs.getInt(key, defaultValue)
     }
 
     fun getLong(key: String?, defaultValue: Long): Long {
-        return this.prefs!!.getLong(key, defaultValue)
+        return this.prefs.getLong(key, defaultValue)
     }
 
     val host: String?
@@ -122,19 +123,5 @@ class Settings {
         put("host", host)
         put("streamPort", streamPort)
         put("controlPort", controlPort)
-    }
-
-    companion object {
-        private var instance: Settings? = null
-
-        @JvmStatic
-        fun getInstance(context: Context): Settings {
-            if (instance == null) {
-                instance = Settings()
-            }
-            instance!!.context = context.applicationContext
-
-            return instance!!
-        }
     }
 }

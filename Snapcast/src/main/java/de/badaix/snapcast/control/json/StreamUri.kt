@@ -15,154 +15,99 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class StreamUri implements JsonSerialisable {
-    private String raw;
-    private String scheme;
-    private String host;
-    private String path;
-    private String fragment;
-    private HashMap<String, String> query;
+class StreamUri(json: JSONObject) : JsonSerialisable {
+    var raw: String? = null
+        private set
+    var scheme: String? = null
+    var host: String? = null
+    var path: String? = null
+    var fragment: String? = null
+    var query: HashMap<String?, String?>? = null
 
-    public StreamUri(JSONObject json) {
-        fromJson(json);
+    init {
+        fromJson(json)
     }
 
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            if (json.has("raw"))
-                raw = json.getString("raw");
-            else if (json.has("uri"))
-                raw = json.getString("uri");
-            scheme = json.getString("scheme");
-            host = json.getString("host");
-            path = json.getString("path");
-            fragment = json.getString("fragment");
-            query = new HashMap<>();
-            JSONObject jQuery = json.getJSONObject("query");
-            for (int i = 0; i < jQuery.names().length(); i++)
-                query.put(jQuery.names().getString(i), jQuery.getString(jQuery.names().getString(i)));
-        } catch (JSONException e) {
-            e.printStackTrace();
+            if (json.has("raw")) raw = json.getString("raw")
+            else if (json.has("uri")) raw = json.getString("uri")
+            scheme = json.getString("scheme")
+            host = json.getString("host")
+            path = json.getString("path")
+            fragment = json.getString("fragment")
+            query = HashMap<String?, String?>()
+            val jQuery = json.getJSONObject("query")
+            for (i in 0..<jQuery.names().length()) query!!.put(
+                jQuery.names().getString(i),
+                jQuery.getString(jQuery.names().getString(i))
+            )
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("raw", raw);
-            json.put("scheme", scheme);
-            json.put("host", host);
-            json.put("path", path);
-            json.put("fragment", fragment);
-            JSONObject jQuery = new JSONObject();
-            for (Map.Entry<String, String> entry : query.entrySet())
-                jQuery.put(entry.getKey(), entry.getValue());
-            json.put("query", jQuery);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("raw", raw)
+            json.put("scheme", scheme)
+            json.put("host", host)
+            json.put("path", path)
+            json.put("fragment", fragment)
+            val jQuery = JSONObject()
+            for (entry in query!!.entries) jQuery.put(entry.key, entry.value)
+            json.put("query", jQuery)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
 
-        StreamUri stream = (StreamUri) o;
+        val stream = o as StreamUri
 
-        if (!Objects.equals(raw, stream.raw)) return false;
-        if (!Objects.equals(scheme, stream.scheme)) return false;
-        if (!Objects.equals(host, stream.host)) return false;
-        if (!Objects.equals(path, stream.path)) return false;
-        if (!Objects.equals(fragment, stream.fragment))
-            return false;
-        return Objects.equals(query, stream.query);
+        if (raw != stream.raw) return false
+        if (scheme != stream.scheme) return false
+        if (host != stream.host) return false
+        if (path != stream.path) return false
+        if (fragment != stream.fragment) return false
+        return query == stream.query
     }
 
-    @Override
-    public int hashCode() {
-        int result = raw != null ? raw.hashCode() : 0;
-        result = 31 * result + (scheme != null ? scheme.hashCode() : 0);
-        result = 31 * result + (host != null ? host.hashCode() : 0);
-        result = 31 * result + (path != null ? path.hashCode() : 0);
-        result = 31 * result + (fragment != null ? fragment.hashCode() : 0);
-        result = 31 * result + (query != null ? query.hashCode() : 0);
-        return result;
+    override fun hashCode(): Int {
+        var result = if (raw != null) raw.hashCode() else 0
+        result = 31 * result + (if (scheme != null) scheme.hashCode() else 0)
+        result = 31 * result + (if (host != null) host.hashCode() else 0)
+        result = 31 * result + (if (path != null) path.hashCode() else 0)
+        result = 31 * result + (if (fragment != null) fragment.hashCode() else 0)
+        result = 31 * result + (if (query != null) query.hashCode() else 0)
+        return result
     }
 
-    public String getRaw() {
-        return raw;
+    fun setUri(uri: String?) {
+        this.raw = raw
     }
 
-    public void setUri(String uri) {
-        this.raw = raw;
-    }
+    val name: String?
+        get() {
+            if (query!!.containsKey("name")) return query!!.get("name")
+            else return ""
+        }
 
-    public String getScheme() {
-        return scheme;
-    }
-
-    public void setScheme(String scheme) {
-        this.scheme = scheme;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public String getFragment() {
-        return fragment;
-    }
-
-    public void setFragment(String fragment) {
-        this.fragment = fragment;
-    }
-
-    public HashMap<String, String> getQuery() {
-        return query;
-    }
-
-    public void setQuery(HashMap<String, String> query) {
-        this.query = query;
-    }
-
-    public String getName() {
-        if (query.containsKey("name"))
-            return query.get("name");
-        else
-            return "";
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
+    override fun toString(): String {
+        return toJson().toString()
     }
 }

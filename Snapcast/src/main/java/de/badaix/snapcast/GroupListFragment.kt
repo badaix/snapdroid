@@ -15,183 +15,157 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast
 
-package de.badaix.snapcast;
-
-import android.content.Context;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-
-import de.badaix.snapcast.control.json.Client;
-import de.badaix.snapcast.control.json.Group;
-import de.badaix.snapcast.control.json.ServerStatus;
-
+import android.content.Context
+import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.ListView
+import androidx.fragment.app.Fragment
+import dagger.hilt.android.AndroidEntryPoint
+import de.badaix.snapcast.GroupItem.GroupItemListener
+import de.badaix.snapcast.control.json.Group
+import de.badaix.snapcast.control.json.ServerStatus
+import de.badaix.snapcast.utils.Settings
+import javax.inject.Inject
 
 /**
- * A simple {@link Fragment} subclass.
+ * A simple [Fragment] subclass.
  * Activities that contain this fragment must implement the
- * {@link GroupItem.GroupItemListener} interface
+ * [GroupItem.GroupItemListener] interface
  * to handle interaction events.
  */
-public class GroupListFragment extends Fragment {
+@AndroidEntryPoint
+class GroupListFragment : Fragment() {
+    @Inject
+    lateinit var settings: Settings
 
-    private static final String TAG = "GroupList";
+    private var groupItemListener: GroupItemListener? = null
+    private var groupAdapter: GroupAdapter? = null
+    private var serverStatus: ServerStatus? = null
+    private var hideOffline = false
 
-    private GroupItem.GroupItemListener groupItemListener;
-    private GroupAdapter groupAdapter;
-    private ServerStatus serverStatus = null;
-    private boolean hideOffline = false;
-
-    public GroupListFragment() {
-        // Required empty public constructor
-    }
-
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
-//            mParam1 = getArguments().getString(ARG_PARAM1);
-//        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         // Inflate the layout for this fragment
-        Log.d(TAG, "onCreateView: " + this);
-        View view = inflater.inflate(R.layout.fragment_group_list, container, false);
-        ListView lvGroup = view.findViewById(R.id.lvGroup);
-        groupAdapter = new GroupAdapter(getContext(), groupItemListener);
-        groupAdapter.setHideOffline(hideOffline);
-        groupAdapter.updateServer(serverStatus);
-        lvGroup.setAdapter(groupAdapter);
-        updateGui();
-        return view;
+        Log.d(TAG, "onCreateView: " + this)
+        val view = inflater.inflate(R.layout.fragment_group_list, container, false)
+        val lvGroup = view.findViewById<ListView>(R.id.lvGroup)
+        groupAdapter = GroupAdapter(requireContext(), groupItemListener)
+        groupAdapter!!.setHideOffline(hideOffline)
+        groupAdapter!!.updateServer(serverStatus)
+        lvGroup.setAdapter(groupAdapter)
+        updateGui()
+        return view
     }
 
 
-    private void updateGui() {
+    private fun updateGui() {
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof GroupItem.GroupItemListener) {
-            groupItemListener = (GroupItem.GroupItemListener) context;
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is GroupItemListener) {
+            groupItemListener = context as GroupItemListener
         } else {
-            throw new RuntimeException(context
-                    + " must implement GroupItemListener");
+            throw RuntimeException(
+                context
+                    .toString() + " must implement GroupItemListener"
+            )
         }
-        updateGui();
+        updateGui()
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        groupItemListener = null;
+    override fun onDetach() {
+        super.onDetach()
+        groupItemListener = null
     }
 
-    public void updateServer(final ServerStatus serverStatus) {
-        this.serverStatus = serverStatus;
-        if (groupAdapter != null)
-            groupAdapter.updateServer(serverStatus);
+    fun updateServer(serverStatus: ServerStatus?) {
+        this.serverStatus = serverStatus
+        if (groupAdapter != null) groupAdapter!!.updateServer(serverStatus)
     }
 
-    public void setHideOffline(boolean hide) {
-        this.hideOffline = hide;
-        if (groupAdapter != null)
-            groupAdapter.setHideOffline(hideOffline);
+    fun setHideOffline(hide: Boolean) {
+        this.hideOffline = hide
+        if (groupAdapter != null) groupAdapter!!.setHideOffline(hideOffline)
     }
 
-    public class GroupAdapter extends ArrayAdapter<Group> {
-        private final Context context;
-        private final GroupItem.GroupItemListener listener;
-        private boolean hideOffline = false;
-        private ServerStatus serverStatus = new ServerStatus();
+    inner class GroupAdapter internal constructor(
+        private val context: Context,
+        private val listener: GroupItemListener?
+    ) : ArrayAdapter<Group>(
+        context, 0
+    ) {
+        private var hideOffline = false
+        private var serverStatus = ServerStatus()
 
-        GroupAdapter(Context context, GroupItem.GroupItemListener listener) {
-            super(context, 0);
-            this.context = context;
-            this.listener = listener;
-        }
 
-        @Override
-        public
-        @NonNull
-        View getView(int position, @Nullable View convertView,
-                     @NonNull ViewGroup parent) {
-            Group group = getItem(position);
-            final GroupItem groupItem;
+        override fun getView(
+            position: Int, convertView: View?,
+            parent: ViewGroup
+        ): View {
+            val group = getItem(position)!!
+            val groupItem: GroupItem
 
             if (convertView != null) {
-                groupItem = (GroupItem) convertView;
-                groupItem.setGroup(group);
+                groupItem = convertView as GroupItem
+                groupItem.setGroup(group)
             } else {
-                groupItem = new GroupItem(context, serverStatus, group);
+                groupItem = GroupItem(context, serverStatus, group)
             }
-            groupItem.setHideOffline(hideOffline);
-            groupItem.setListener(listener);
-            return groupItem;
+            groupItem.setHideOffline(hideOffline)
+            groupItem.setListener(listener)
+            return groupItem
         }
 
-        void updateServer(final ServerStatus serverStatus) {
+        fun updateServer(serverStatus: ServerStatus?) {
             if (serverStatus != null) {
-                GroupAdapter.this.serverStatus = serverStatus;
-                update();
+                this@GroupAdapter.serverStatus = serverStatus
+                update()
             }
         }
 
 
-        void update() {
-            FragmentActivity activity = getActivity();
-            if (activity == null)
-                return;
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    clear();
-                    for (Group group : GroupAdapter.this.serverStatus.getGroups()) {
-                        if (group.getClients().isEmpty())
-                            continue;
+        fun update() {
+            val activity = getActivity()
+            if (activity == null) return
+            activity.runOnUiThread {
+                clear()
+                for (group in this@GroupAdapter.serverStatus.groups) {
+                    if (group.clients.isEmpty()) continue
 
-                        int onlineCount = 0;
-                        int count = 0;
-                        for (Client client : group.getClients()) {
-                            if (client == null || client.isDeleted())
-                                continue;
-                            if (client.isConnected())// && client.getConfig().getStream().equals(GroupListFragment.this.stream.getId()))
-                                onlineCount++;
-                            count++;
-                        }
-
-                        if ((onlineCount > 0) || (!hideOffline && (count > 0)))
-                            add(group);
+                    var onlineCount = 0
+                    var count = 0
+                    for (client in group.clients) {
+                        if (client.isDeleted) continue
+                        if (client.isConnected)  // && client.config!!.stream.equals(GroupListFragment.this.stream.id))
+                            onlineCount++
+                        count++
                     }
 
-                    if (getActivity() != null)
-                        notifyDataSetChanged();
+                    if ((onlineCount > 0) || (!hideOffline && (count > 0))) add(group)
                 }
-            });
+
+                if (getActivity() != null) notifyDataSetChanged()
+            }
         }
 
-        void setHideOffline(boolean hideOffline) {
-            if (this.hideOffline == hideOffline)
-                return;
-            this.hideOffline = hideOffline;
-            update();
+        fun setHideOffline(hideOffline: Boolean) {
+            if (this.hideOffline == hideOffline) return
+            this.hideOffline = hideOffline
+            update()
         }
     }
 
 
+    companion object {
+        private const val TAG = "GroupList"
+    }
 }

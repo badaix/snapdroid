@@ -15,298 +15,263 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast
 
-package de.badaix.snapcast;
-
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.Vector;
-
-import de.badaix.snapcast.control.json.Client;
-import de.badaix.snapcast.control.json.Group;
-import de.badaix.snapcast.control.json.ServerStatus;
-import de.badaix.snapcast.control.json.Stream;
-import de.badaix.snapcast.control.json.Volume;
+import android.app.AlertDialog
+import android.content.Context
+import android.content.DialogInterface
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.View.OnFocusChangeListener
+import android.view.View.OnTouchListener
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.TextView
+import de.badaix.snapcast.ClientItem.ClientItemListener
+import de.badaix.snapcast.control.json.Group
+import de.badaix.snapcast.control.json.ServerStatus
+import java.util.Vector
+import kotlin.math.ceil
 
 /**
  * Created by johannes on 04.12.16.
  */
-
-
-public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeListener, View.OnClickListener, ClientItem.ClientItemListener, View.OnTouchListener, View.OnFocusChangeListener {
-
-    private static final String TAG = "GroupItem";
-
+class GroupItem(context: Context, server: ServerStatus, group: Group) : LinearLayout(context),
+    OnSeekBarChangeListener, View.OnClickListener, ClientItemListener, OnTouchListener,
+    OnFocusChangeListener {
     //    private TextView title;
-    private final SeekBar volumeSeekBar;
-    private final ImageButton ibMute;
-    private final ImageButton ibSettings;
-    private final LinearLayout llClient;
-    private Group group;
-    private final ServerStatus server;
-    private TextView tvStreamName = null;
-    private GroupItemListener listener = null;
-    private final LinearLayout llVolume;
-    private boolean hideOffline = false;
-    private Vector<ClientItem> clientItems = null;
-    private Vector<Integer> clientVolumes = null;
-    private int groupVolume = 0;
+    private val volumeSeekBar: SeekBar
+    private val ibMute: ImageButton
+    private val ibSettings: ImageButton
+    private val llClient: LinearLayout
+    var group: Group? = null
+        private set
+    private val server: ServerStatus
+    private var tvStreamName: TextView? = null
+    private var listener: GroupItemListener? = null
+    private val llVolume: LinearLayout
+    private var hideOffline = false
+    private var clientItems: Vector<ClientItem>? = null
+    private var clientVolumes: Vector<Int?>? = null
+    private var groupVolume = 0
 
-    public GroupItem(Context context, ServerStatus server, Group group) {
-        super(context);
-        LayoutInflater vi = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        vi.inflate(R.layout.group_item, this);
-//        title = (TextView) findViewById(R.id.title);
-        volumeSeekBar = findViewById(R.id.volumeSeekBar);
-        ibMute = findViewById(R.id.ibMute);
-        ibMute.setImageResource(R.drawable.volume_up_24px);
-        ibMute.setOnClickListener(this);
-        ibSettings = findViewById(R.id.ibSettings);
-        ibSettings.setOnClickListener(this);
-        llVolume = findViewById(R.id.llVolume);
-        llVolume.setVisibility(GONE);
-        llClient = findViewById(R.id.llClient);
-        llClient.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        tvStreamName = findViewById(R.id.tvStreamName);
-        tvStreamName.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                streamChoiceDialog();
-            }
-        });
-        volumeSeekBar.setOnSeekBarChangeListener(this);
-        volumeSeekBar.setOnTouchListener(this);
-        volumeSeekBar.setOnFocusChangeListener(this);
-        this.server = server;
-        clientItems = new Vector<>();
-        clientVolumes = new Vector<>();
-        setGroup(group);
+    init {
+        val vi = context
+            .getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        vi.inflate(R.layout.group_item, this)
+        //        title = (TextView) findViewById(R.id.title);
+        volumeSeekBar = findViewById<SeekBar>(R.id.volumeSeekBar)
+        ibMute = findViewById<ImageButton>(R.id.ibMute)
+        ibMute.setImageResource(R.drawable.volume_up_24px)
+        ibMute.setOnClickListener(this)
+        ibSettings = findViewById<ImageButton>(R.id.ibSettings)
+        ibSettings.setOnClickListener(this)
+        llVolume = findViewById<LinearLayout>(R.id.llVolume)
+        llVolume.setVisibility(GONE)
+        llClient = findViewById<LinearLayout>(R.id.llClient)
+        llClient.setLayoutParams(LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+        tvStreamName = findViewById<TextView?>(R.id.tvStreamName)
+        tvStreamName!!.setOnClickListener { streamChoiceDialog() }
+        volumeSeekBar.setOnSeekBarChangeListener(this)
+        volumeSeekBar.setOnTouchListener(this)
+        volumeSeekBar.setOnFocusChangeListener(this)
+        this.server = server
+        clientItems = Vector<ClientItem>()
+        clientVolumes = Vector<Int?>()
+        setGroup(group)
     }
 
-    private void update() {
-//        title.setText(group.getName());
-        llClient.removeAllViews();
-        clientItems.clear();
-        for (Client client : group.getClients()) {
-            if ((client == null) || client.isDeleted() || (hideOffline && !client.isConnected()))
-                continue;
+    private fun update() {
+//        title.setText(group.name);
+        llClient.removeAllViews()
+        clientItems!!.clear()
+        for (client in group!!.clients) {
+            if ((client == null) || client.isDeleted || (hideOffline && !client.isConnected)) continue
 
-            ClientItem clientItem = new ClientItem(this.getContext(), client);
-            clientItem.setListener(this);
-            clientItems.add(clientItem);
-            llClient.addView(clientItem);
+            val clientItem = ClientItem(this.getContext(), client)
+            clientItem.setListener(this)
+            clientItems!!.add(clientItem)
+            llClient.addView(clientItem)
         }
 
-        if (group.isMuted())
-            ibMute.setImageResource(R.drawable.volume_off_24px);
-        else
-            ibMute.setImageResource(R.drawable.volume_up_24px);
+        if (group!!.isMuted) ibMute.setImageResource(R.drawable.volume_off_24px)
+        else ibMute.setImageResource(R.drawable.volume_up_24px)
 
-        if ((clientItems.size() >= 2) || ((clientItems.size() == 1) && group.isMuted()))
-            llVolume.setVisibility(VISIBLE);
-        else
-            llVolume.setVisibility(GONE);
-        updateVolume();
+        if ((clientItems!!.size >= 2) || ((clientItems!!.size == 1) && group!!.isMuted)) llVolume.setVisibility(
+            VISIBLE
+        )
+        else llVolume.setVisibility(GONE)
+        updateVolume()
 
-        Stream stream = server.getStream(group.getStreamId());
-        if ((tvStreamName == null) || (stream == null))
-            return;
-        tvStreamName.setText(stream.getName());
-/*        String codec = stream.getUri().getQuery().get("codec");
+        val stream = server.getStream(group!!.streamId)
+        if ((tvStreamName == null) || (stream == null)) return
+        tvStreamName!!.setText(stream.name)
+        /*        String codec = stream.getUri().getQuery().get("codec");
         if (codec.contains(":"))
             codec = codec.split(":")[0];
         tvStreamState.setText(stream.getUri().getQuery().get("sampleformat") + " - " + codec + " - " + stream.getStatus().toString());
 
-        title.setEnabled(group.isConnected());
-        volumeSeekBar.setProgress(group.getConfig().getVolume().getPercent());
-        if (client.getConfig().getVolume().isMuted())
+        title.setEnabled(group.isConnected);
+        volumeSeekBar.setProgress(group.config!!.volume.percent);
+        if (client.config!!.volume.isMuted)
             ibMute.setImageResource(R.drawable.ic_mute_icon);
         else
             ibMute.setImageResource(R.drawable.ic_speaker_icon);
 */
     }
 
-    private void updateVolume() {
-        double meanVolume = 0;
-        for (ClientItem c : clientItems) {
-            meanVolume += c.getClient().getConfig().getVolume().getPercent();
+    private fun updateVolume() {
+        var meanVolume = 0.0
+        for (c in clientItems!!) {
+            meanVolume += c.client!!.config!!.volume!!.percent.toDouble()
         }
-        meanVolume /= clientItems.size();
-        volumeSeekBar.setProgress((int) (Math.ceil(meanVolume)));
+        meanVolume /= clientItems!!.size.toDouble()
+        volumeSeekBar.setProgress((ceil(meanVolume)).toInt())
     }
 
-    public Group getGroup() {
-        return group;
+    fun setGroup(group: Group) {
+        this.group = group
+        update()
     }
 
-    public void setGroup(final Group group) {
-        this.group = group;
-        update();
+    fun setListener(listener: GroupItemListener?) {
+        this.listener = listener
     }
 
-    public void setListener(GroupItemListener listener) {
-        this.listener = listener;
+    fun setHideOffline(hideOffline: Boolean) {
+        if (this.hideOffline == hideOffline) return
+        this.hideOffline = hideOffline
+        update()
     }
 
-    public void setHideOffline(boolean hideOffline) {
-        if (this.hideOffline == hideOffline)
-            return;
-        this.hideOffline = hideOffline;
-        update();
-    }
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        if (!fromUser) return
 
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (!fromUser)
-            return;
+        val delta = progress - groupVolume
+        if (delta == 0) return
 
-        int delta = progress - groupVolume;
-        if (delta == 0)
-            return;
+        val ratio: Double
+        if (delta < 0) ratio = (groupVolume - progress).toDouble() / groupVolume.toDouble()
+        else ratio = (progress - groupVolume).toDouble() / (100 - groupVolume).toDouble()
 
-        double ratio;
-        if (delta < 0)
-            ratio = (double) (groupVolume - progress) / (double) groupVolume;
-        else
-            ratio = (double) (progress - groupVolume) / (double) (100 - groupVolume);
-
-        for (int i = 0; i < clientItems.size(); ++i) {
-            ClientItem clientItem = clientItems.get(i);
-            int clientVolume = clientVolumes.get(i);
-            int newVolume = clientVolume;
-            if (delta < 0)
-                newVolume -= ratio * clientVolume;
-            else
-                newVolume += ratio * (100 - clientVolume);
-            Volume volume = clientItem.getClient().getConfig().getVolume();
-            volume.setPercent(newVolume);
-            clientItem.update();
+        for (i in clientItems!!.indices) {
+            val clientItem = clientItems!!.get(i)
+            val clientVolume = clientVolumes!!.get(i)!!
+            var newVolume = clientVolume
+            if (delta < 0) newVolume = (newVolume - ratio * clientVolume).toInt()
+            else newVolume = (newVolume + ratio * (100 - clientVolume)).toInt()
+            val volume = clientItem.client!!.config!!.volume
+            volume!!.percent = newVolume
+            clientItem.update()
         }
-        if (listener != null)
-            listener.onGroupVolumeChanged(this);
+        if (listener != null) listener!!.onGroupVolumeChanged(this)
     }
 
-    private void updateClientVolumes() {
-        clientVolumes.clear();
-        for (int i = 0; i < clientItems.size(); ++i)
-            clientVolumes.add(clientItems.get(i).getClient().getConfig().getVolume().getPercent());
-        groupVolume = volumeSeekBar.getProgress();
+    private fun updateClientVolumes() {
+        clientVolumes!!.clear()
+        for (i in clientItems!!.indices) clientVolumes!!.add(
+            clientItems!!.get(i).client!!.config!!.volume!!.percent
+        )
+        groupVolume = volumeSeekBar.getProgress()
     }
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
+    override fun onTouch(v: View?, event: MotionEvent): Boolean {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            updateClientVolumes();
-            Log.d(TAG, "onTouch: " + groupVolume);
+            updateClientVolumes()
+            Log.d(TAG, "onTouch: " + groupVolume)
         }
-        return false;
+        return false
     }
 
-    @Override
-    public void onFocusChange(View view, boolean hasFocus) {
-        Log.d(TAG, "onFocusChange hasFocus: " + hasFocus);
+    override fun onFocusChange(view: View?, hasFocus: Boolean) {
+        Log.d(TAG, "onFocusChange hasFocus: " + hasFocus)
         if (hasFocus) {
-            updateClientVolumes();
-            Log.d(TAG, "onFocusChange: " + groupVolume);
+            updateClientVolumes()
+            Log.d(TAG, "onFocusChange: " + groupVolume)
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == ibMute) {
-            group.setMuted(!group.isMuted());
-            update();
-            listener.onMute(this, group.isMuted());
-        } else if (v == ibSettings) {
-            listener.onPropertiesClicked(this);
+    override fun onClick(v: View?) {
+        if (v === ibMute) {
+            group!!.isMuted = !group!!.isMuted
+            update()
+            listener!!.onMute(this, group!!.isMuted)
+        } else if (v === ibSettings) {
+            listener!!.onPropertiesClicked(this)
         }
     }
 
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
     }
 
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
     }
 
-    @Override
-    public void onVolumeChanged(ClientItem clientItem, int percent, boolean mute) {
-        if (listener != null)
-            listener.onVolumeChanged(this, clientItem, percent, mute);
-        updateVolume();
+    override fun onVolumeChanged(clientItem: ClientItem?, percent: Int, mute: Boolean) {
+        if (listener != null) listener!!.onVolumeChanged(this, clientItem, percent, mute)
+        updateVolume()
     }
 
-    @Override
-    public void onDeleteClicked(ClientItem clientItem) {
-        if (listener != null)
-            listener.onDeleteClicked(this, clientItem);
+    override fun onDeleteClicked(clientItem: ClientItem?) {
+        if (listener != null) listener!!.onDeleteClicked(this, clientItem)
     }
 
-    @Override
-    public void onPropertiesClicked(ClientItem clientItem) {
-        if (listener != null)
-            listener.onClientPropertiesClicked(this, clientItem);
+    override fun onPropertiesClicked(clientItem: ClientItem?) {
+        if (listener != null) listener!!.onClientPropertiesClicked(this, clientItem)
     }
 
-    private void streamChoiceDialog() {
-        final ArrayList<CharSequence> streamNames = new ArrayList<>();
-        final ArrayList<String> streamIds = new ArrayList<>();
-        int checkedStream = -1, index = 0;
-        for (Stream stream : server.getStreams()) {
-            streamNames.add(stream.getName());
-            streamIds.add(stream.getId());
-            if (group.getStreamId().equals(stream.getId())) checkedStream = index;
-            index++;
+    private fun streamChoiceDialog() {
+        val streamNames = ArrayList<CharSequence?>()
+        val streamIds = ArrayList<String?>()
+        var checkedStream = -1
+        var index = 0
+        for (stream in server.streams) {
+            streamNames.add(stream.name)
+            streamIds.add(stream.id)
+            if (group!!.streamId == stream.id) checkedStream = index
+            index++
         }
-        final CharSequence[] streamNamesArr = streamNames.toArray(new CharSequence[]{});
-        final String[] streamIdsArr = streamIds.toArray(new String[]{});
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
-        alertDialog.setTitle(getContext().getString(R.string.client_stream));
-        alertDialog.setCancelable(true);
-        alertDialog.setSingleChoiceItems(streamNamesArr, checkedStream, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String newStreamId = streamIdsArr[which];
-                if (!newStreamId.equals(group.getStreamId())) {
-                    listener.onGroupStreamChanged(group, newStreamId);
-                }
-                dialog.cancel();
+        val streamNamesArr = streamNames.toArray<CharSequence?>(arrayOf<CharSequence?>())
+        val streamIdsArr = streamIds.toArray<String?>(arrayOf<String?>())
+        val alertDialog = AlertDialog.Builder(getContext())
+        alertDialog.setTitle(getContext().getString(R.string.client_stream))
+        alertDialog.setCancelable(true)
+        alertDialog.setSingleChoiceItems(
+            streamNamesArr,
+            checkedStream
+        ) { dialog, which ->
+            val newStreamId = streamIdsArr[which]
+            if (newStreamId != group!!.streamId) {
+                listener!!.onGroupStreamChanged(group, newStreamId)
             }
-        });
-        AlertDialog alert = alertDialog.create();
-        alert.setCanceledOnTouchOutside(true);
-        alert.show();
+            dialog.cancel()
+        }
+        val alert = alertDialog.create()
+        alert.setCanceledOnTouchOutside(true)
+        alert.show()
     }
 
-    public interface GroupItemListener {
-        void onGroupVolumeChanged(GroupItem group);
+    interface GroupItemListener {
+        fun onGroupVolumeChanged(group: GroupItem?)
 
-        void onMute(GroupItem group, boolean mute);
+        fun onMute(group: GroupItem?, mute: Boolean)
 
-        void onVolumeChanged(GroupItem group, ClientItem clientItem, int percent, boolean mute);
+        fun onVolumeChanged(group: GroupItem?, clientItem: ClientItem?, percent: Int, mute: Boolean)
 
-        void onDeleteClicked(GroupItem group, ClientItem clientItem);
+        fun onDeleteClicked(group: GroupItem?, clientItem: ClientItem?)
 
-        void onClientPropertiesClicked(GroupItem group, ClientItem clientItem);
+        fun onClientPropertiesClicked(group: GroupItem?, clientItem: ClientItem?)
 
-        void onPropertiesClicked(GroupItem group);
+        fun onPropertiesClicked(group: GroupItem?)
 
-        void onGroupStreamChanged(Group group, String streamId);
+        fun onGroupStreamChanged(group: Group?, streamId: String?)
     }
 
+    companion object {
+        private const val TAG = "GroupItem"
+    }
 }

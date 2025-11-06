@@ -15,22 +15,16 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONObject;
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class Snapclient extends Snapcast {
+class Snapclient : Snapcast {
+    constructor() : super()
 
-    public Snapclient() {
-        super();
-    }
-
-    public Snapclient(JSONObject json) {
-        super(json);
-    }
+    constructor(json: JSONObject?) : super(json)
 }
 

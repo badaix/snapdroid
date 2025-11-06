@@ -15,91 +15,67 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class Volume implements JsonSerialisable {
-    private boolean muted = false;
-    private int percent = 100;
+class Volume : JsonSerialisable {
+    var isMuted: Boolean = false
+    var percent: Int = 100
 
-    public Volume(JSONObject json) {
-        fromJson(json);
+    constructor(json: JSONObject) {
+        fromJson(json)
     }
 
-    public Volume() {
+    constructor()
 
+    constructor(percent: Int, muted: Boolean) {
+        this.percent = percent
+        this.isMuted = muted
     }
 
-    public Volume(int percent, boolean muted) {
-        this.percent = percent;
-        this.muted = muted;
-    }
-
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            percent = json.getInt("percent");
-            muted = json.getBoolean("muted");
-        } catch (JSONException e) {
-            e.printStackTrace();
+            percent = json.getInt("percent")
+            this.isMuted = json.getBoolean("muted")
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("percent", percent);
-            json.put("muted", muted);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("percent", percent)
+            json.put("muted", this.isMuted)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public int getPercent() {
-        return percent;
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    public void setPercent(int percent) {
-        this.percent = percent;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
+
+        val volume = o as Volume
+
+        if (this.isMuted != volume.isMuted) return false
+        return percent == volume.percent
     }
 
-    public boolean isMuted() {
-        return muted;
-    }
-
-    public void setMuted(boolean muted) {
-        this.muted = muted;
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Volume volume = (Volume) o;
-
-        if (muted != volume.muted) return false;
-        return percent == volume.percent;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (muted ? 1 : 0);
-        result = 31 * result + percent;
-        return result;
+    override fun hashCode(): Int {
+        var result = (if (this.isMuted) 1 else 0)
+        result = 31 * result + percent
+        return result
     }
 }

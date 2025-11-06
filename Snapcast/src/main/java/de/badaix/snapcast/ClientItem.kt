@@ -15,139 +15,122 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast
 
-package de.badaix.snapcast;
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.TextView
+import androidx.appcompat.widget.PopupMenu
+import de.badaix.snapcast.control.json.Client
 
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
+class ClientItem @JvmOverloads constructor(context: Context, client: Client) :
+    LinearLayout(context), OnSeekBarChangeListener, View.OnClickListener,
+    PopupMenu.OnMenuItemClickListener {
+    private val title: TextView
+    private val volumeSeekBar: SeekBar
+    private val ibMute: ImageButton
+    private val ibOverflow: ImageButton
+    var client: Client? = null
+        private set
+    private var listener: ClientItemListener? = null
 
-import androidx.appcompat.widget.PopupMenu;
-
-import de.badaix.snapcast.control.json.Client;
-import de.badaix.snapcast.control.json.Volume;
-
-public class ClientItem extends LinearLayout implements SeekBar.OnSeekBarChangeListener, View.OnClickListener, PopupMenu.OnMenuItemClickListener {
-
-    private static final String TAG = "ClientItem";
-
-    private final TextView title;
-    private final SeekBar volumeSeekBar;
-    private final ImageButton ibMute;
-    private final ImageButton ibOverflow;
-    private Client client;
-    private ClientItemListener listener = null;
-
-    public ClientItem(Context context) {
-        this(context, null);
+    init {
+        val vi = context
+            .getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        vi.inflate(R.layout.client_item, this)
+        title = findViewById<TextView>(R.id.title)
+        volumeSeekBar = findViewById<SeekBar>(R.id.volumeSeekBar)
+        ibMute = findViewById<ImageButton>(R.id.ibMute)
+        ibMute.setImageResource(R.drawable.volume_up_24px)
+        ibMute.setOnClickListener(this)
+        ibOverflow = findViewById<ImageButton>(R.id.ibOverflow)
+        ibOverflow.setOnClickListener(this)
+        volumeSeekBar.setOnSeekBarChangeListener(this)
+        setClient(client)
     }
 
-    public ClientItem(Context context, Client client) {
-        super(context);
-        LayoutInflater vi = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        vi.inflate(R.layout.client_item, this);
-        title = findViewById(R.id.title);
-        volumeSeekBar = findViewById(R.id.volumeSeekBar);
-        ibMute = findViewById(R.id.ibMute);
-        ibMute.setImageResource(R.drawable.volume_up_24px);
-        ibMute.setOnClickListener(this);
-        ibOverflow = findViewById(R.id.ibOverflow);
-        ibOverflow.setOnClickListener(this);
-        volumeSeekBar.setOnSeekBarChangeListener(this);
-        setClient(client);
+    fun update() {
+        //Log.d(TAG, "update: " + client.visibleName + ", connected: " + client.isConnected);
+        if (client!!.visibleName != title.getText()) title.setText(client!!.visibleName)
+        title.setEnabled(client!!.isConnected)
+        volumeSeekBar.setProgress(client!!.config!!.volume!!.percent)
+        if (client!!.config!!.volume!!
+                .isMuted
+        ) ibMute.setImageResource(R.drawable.volume_off_24px)
+        else ibMute.setImageResource(R.drawable.volume_up_24px)
     }
 
-    public void update() {
-        //Log.d(TAG, "update: " + client.getVisibleName() + ", connected: " + client.isConnected());
-        if (!client.getVisibleName().equals(title.getText()))
-            title.setText(client.getVisibleName());
-        title.setEnabled(client.isConnected());
-        volumeSeekBar.setProgress(client.getConfig().getVolume().getPercent());
-        if (client.getConfig().getVolume().isMuted())
-            ibMute.setImageResource(R.drawable.volume_off_24px);
-        else
-            ibMute.setImageResource(R.drawable.volume_up_24px);
+    fun setClient(client: Client) {
+        this.client = client
+        update()
     }
 
-    public Client getClient() {
-        return client;
+    fun setListener(listener: ClientItemListener?) {
+        this.listener = listener
     }
 
-    public void setClient(final Client client) {
-        this.client = client;
-        update();
-    }
-
-    public void setListener(ClientItemListener listener) {
-        this.listener = listener;
-    }
-
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
         if (fromUser && (listener != null)) {
-            Volume volume = client.getConfig().getVolume();
-            volume.setPercent(progress);
-            listener.onVolumeChanged(this, volume.getPercent(), volume.isMuted());
+            val volume = client!!.config!!.volume!!
+            volume!!.percent = progress
+            listener!!.onVolumeChanged(this, volume!!.percent, volume.isMuted)
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == ibMute) {
-            Volume volume = client.getConfig().getVolume();
-            volume.setMuted(!volume.isMuted());
-            update();
-            listener.onVolumeChanged(this, volume.getPercent(), volume.isMuted());
-        } else if (v == ibOverflow) {
-            PopupMenu popup = new PopupMenu(v.getContext(), v);
-            popup.getMenu().add(Menu.NONE, R.id.menu_details, 0, R.string.menu_details);
-            if (!client.isConnected())
-                popup.getMenu().add(Menu.NONE, R.id.menu_delete, 1, R.string.menu_delete);
-            popup.setOnMenuItemClickListener(this);
-            popup.show();
+    override fun onClick(v: View) {
+        if (v === ibMute) {
+            val volume = client!!.config!!.volume
+            volume!!.isMuted = !volume!!.isMuted
+            update()
+            listener!!.onVolumeChanged(this, volume.percent, volume.isMuted)
+        } else if (v === ibOverflow) {
+            val popup = PopupMenu(v.context, v)
+            popup.getMenu().add(Menu.NONE, R.id.menu_details, 0, R.string.menu_details)
+            if (!client!!.isConnected) popup.menu
+                .add(Menu.NONE, R.id.menu_delete, 1, R.string.menu_delete)
+            popup.setOnMenuItemClickListener(this)
+            popup.show()
         }
     }
 
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
     }
 
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
     }
 
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        int id = item.getItemId();
+    override fun onMenuItemClick(item: MenuItem): Boolean {
+        val id = item.getItemId()
 
         if (id == R.id.menu_details) {
-            listener.onPropertiesClicked(this);
-            return true;
+            listener!!.onPropertiesClicked(this)
+            return true
         }
 
         if (id == R.id.menu_delete) {
-            listener.onDeleteClicked(this);
-            return true;
+            listener!!.onDeleteClicked(this)
+            return true
         }
 
-        return false;
+        return false
     }
 
-    public interface ClientItemListener {
-        void onVolumeChanged(ClientItem clientItem, int percent, boolean mute);
+    interface ClientItemListener {
+        fun onVolumeChanged(clientItem: ClientItem?, percent: Int, mute: Boolean)
 
-        void onDeleteClicked(ClientItem clientItem);
+        fun onDeleteClicked(clientItem: ClientItem?)
 
-        void onPropertiesClicked(ClientItem clientItem);
+        fun onPropertiesClicked(clientItem: ClientItem?)
     }
 
+    companion object {
+        private const val TAG = "ClientItem"
+    }
 }

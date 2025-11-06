@@ -15,111 +15,75 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Objects;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class ClientConfig implements JsonSerialisable {
-    String name = "";
-    Volume volume;
-    int latency = 0;
-    int instance = 1;
+class ClientConfig : JsonSerialisable {
+    var name: String? = ""
+    var volume: Volume? = null
+    var latency: Int = 0
+    var instance: Int = 1
 
-    public ClientConfig() {
-        volume = new Volume();
+    constructor() {
+        volume = Volume()
     }
 
-    public ClientConfig(JSONObject json) {
-        fromJson(json);
+    constructor(json: JSONObject) {
+        fromJson(json)
     }
 
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            name = json.getString("name");
-            volume = new Volume(json.getJSONObject("volume"));
-            latency = json.getInt("latency");
-            instance = json.getInt("instance");
-        } catch (JSONException e) {
-            e.printStackTrace();
+            name = json.getString("name")
+            volume = Volume(json.getJSONObject("volume"))
+            latency = json.getInt("latency")
+            instance = json.getInt("instance")
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("name", name);
-            json.put("volume", volume.toJson());
-            json.put("latency", latency);
-            json.put("instance", instance);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("name", name)
+            json.put("volume", volume!!.toJson())
+            json.put("latency", latency)
+            json.put("instance", instance)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public Volume getVolume() {
-        return volume;
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    public void setVolume(Volume volume) {
-        this.volume = volume;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
+
+        val that = o as ClientConfig
+
+        if (latency != that.latency) return false
+        if (name != that.name) return false
+        if (instance != that.instance) return false
+        return volume == that.volume
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getLatency() {
-        return latency;
-    }
-
-    public void setLatency(int latency) {
-        this.latency = latency;
-    }
-
-    public int getInstance() {
-        return instance;
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ClientConfig that = (ClientConfig) o;
-
-        if (latency != that.latency) return false;
-        if (!Objects.equals(name, that.name)) return false;
-        if (instance != that.instance) return false;
-        return Objects.equals(volume, that.volume);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (volume != null ? volume.hashCode() : 0);
-        result = 31 * result + latency;
-        result = 31 * result + instance;
-        return result;
+    override fun hashCode(): Int {
+        var result = if (name != null) name.hashCode() else 0
+        result = 31 * result + (if (volume != null) volume.hashCode() else 0)
+        result = 31 * result + latency
+        result = 31 * result + instance
+        return result
     }
 }
 

@@ -15,88 +15,68 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Objects;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class Snapcast implements JsonSerialisable {
-    String name = "";
-    String version = "";
-    int protocolVersion = 1;
+open class Snapcast : JsonSerialisable {
+    var name: String? = ""
+    var version: String? = ""
+    var protocolVersion: Int = 1
 
-    public Snapcast() {
+    constructor()
+
+    constructor(json: JSONObject?) {
+        fromJson(json)
     }
 
-    public Snapcast(JSONObject json) {
-        fromJson(json);
-    }
-
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            name = json.getString("name");
-            version = json.getString("version");
-            protocolVersion = json.getInt("protocolVersion");
-        } catch (JSONException e) {
-            e.printStackTrace();
+            name = json.getString("name")
+            version = json.getString("version")
+            protocolVersion = json.getInt("protocolVersion")
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("name", name);
-            json.put("version", version);
-            json.put("protocolVersion", protocolVersion);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("name", name)
+            json.put("version", version)
+            json.put("protocolVersion", protocolVersion)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public String getName() {
-        return name;
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    public String getVersion() {
-        return version;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
+
+        val that = o as Snapcast
+
+        if (name != that.name) return false
+        if (version != that.version) return false
+        return (protocolVersion == that.protocolVersion)
     }
 
-    public int getProtocolVersion() {
-        return protocolVersion;
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Snapcast that = (Snapcast) o;
-
-        if (!Objects.equals(name, that.name)) return false;
-        if (!Objects.equals(version, that.version)) return false;
-        return (protocolVersion == that.protocolVersion);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (version != null ? version.hashCode() : 0);
-        result = 31 * result + protocolVersion;
-        return result;
+    override fun hashCode(): Int {
+        var result = if (name != null) name.hashCode() else 0
+        result = 31 * result + (if (version != null) version.hashCode() else 0)
+        result = 31 * result + protocolVersion
+        return result
     }
 }
 

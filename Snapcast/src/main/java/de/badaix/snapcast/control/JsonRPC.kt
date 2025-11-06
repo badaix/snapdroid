@@ -15,159 +15,141 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control
 
-package de.badaix.snapcast.control;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 19.02.17.
  */
-
-class RPCRequest {
-    RPCRequest(JSONObject json) throws JSONException {
-        fromJson(json);
+internal class RPCRequest {
+    constructor(json: JSONObject) {
+        fromJson(json)
     }
 
-    RPCRequest(String json) throws JSONException {
-        this(new JSONObject(json));
+    constructor(json: String) : this(JSONObject(json))
+
+    constructor(method: String?, id: Long, params: JSONObject?) {
+        this.method = method
+        this.id = id
+        this.params = params
     }
 
-    RPCRequest(String method, long id, JSONObject params) {
-        this.method = method;
-        this.id = id;
-        this.params = params;
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    JSONObject toJson() {
-        JSONObject request = new JSONObject();
+    fun toJson(): JSONObject? {
+        val request = JSONObject()
         try {
-            request.put("jsonrpc", "2.0");
-            request.put("method", method);
-            request.put("id", id);
-            if (params != null)
-                request.put("params", params);
-            return request;
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
+            request.put("jsonrpc", "2.0")
+            request.put("method", method)
+            request.put("id", id)
+            if (params != null) request.put("params", params)
+            return request
+        } catch (e: JSONException) {
+            e.printStackTrace()
+            return null
         }
     }
 
-    void fromJson(JSONObject json) throws JSONException {
-        id = json.getLong("id");
-        method = json.getString("method");
-        if (json.has("params"))
-            params = json.getJSONObject("params");
-        else
-            params = null;
+    @Throws(JSONException::class)
+    fun fromJson(json: JSONObject) {
+        id = json.getLong("id")
+        method = json.getString("method")
+        if (json.has("params")) params = json.getJSONObject("params")
+        else params = null
     }
 
-    String method;
-    long id;
-    JSONObject params;
+    var method: String? = null
+    var id: Long = 0
+    var params: JSONObject? = null
 }
 
 
-class RPCNotification {
-    RPCNotification(JSONObject json) throws JSONException {
-        fromJson(json);
+internal class RPCNotification {
+    constructor(json: JSONObject) {
+        fromJson(json)
     }
 
-    RPCNotification(String json) throws JSONException {
-        this(new JSONObject(json));
+    constructor(json: String) : this(JSONObject(json))
+
+    constructor(method: String?, id: Long, params: JSONObject?) {
+        this.method = method
+        this.params = params
     }
 
-    RPCNotification(String method, long id, JSONObject params) {
-        this.method = method;
-        this.params = params;
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    JSONObject toJson() {
-        JSONObject request = new JSONObject();
+    fun toJson(): JSONObject? {
+        val request = JSONObject()
         try {
-            request.put("jsonrpc", "2.0");
-            request.put("method", method);
-            if (params != null)
-                request.put("params", params);
-            return request;
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
+            request.put("jsonrpc", "2.0")
+            request.put("method", method)
+            if (params != null) request.put("params", params)
+            return request
+        } catch (e: JSONException) {
+            e.printStackTrace()
+            return null
         }
     }
 
-    void fromJson(JSONObject json) throws JSONException {
-        method = json.getString("method");
-        if (json.has("params"))
-            params = json.getJSONObject("params");
-        else
-            params = null;
+    @Throws(JSONException::class)
+    fun fromJson(json: JSONObject) {
+        method = json.getString("method")
+        if (json.has("params")) params = json.getJSONObject("params")
+        else params = null
     }
 
-    String method;
-    JSONObject params;
+    var method: String? = null
+    var params: JSONObject? = null
 }
 
 
-class RPCResponse {
-    RPCResponse(JSONObject json) throws JSONException {
-        fromJson(json);
+internal class RPCResponse(json: JSONObject) {
+    constructor(json: String) : this(JSONObject(json))
+
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    RPCResponse(String json) throws JSONException {
-        this(new JSONObject(json));
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    JSONObject toJson() {
-        JSONObject response = new JSONObject();
+    fun toJson(): JSONObject? {
+        val response = JSONObject()
         try {
-            response.put("jsonrpc", "2.0");
-            if (error != null)
-                response.put("error", error);
-            else if (result != null)
-                response.put("result", result);
-            else
-                throw new JSONException("error and result are null");
+            response.put("jsonrpc", "2.0")
+            if (error != null) response.put("error", error)
+            else if (result != null) response.put("result", result)
+            else throw JSONException("error and result are null")
 
-            response.put("id", id);
-            return response;
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
+            response.put("id", id)
+            return response
+        } catch (e: JSONException) {
+            e.printStackTrace()
+            return null
         }
     }
 
-    void fromJson(JSONObject json) throws JSONException {
-        id = json.getLong("id");
+    @Throws(JSONException::class)
+    fun fromJson(json: JSONObject) {
+        id = json.getLong("id")
         if (json.has("error")) {
-            error = json.getJSONObject("error");
-            result = null;
+            error = json.getJSONObject("error")
+            result = null
         } else if (json.has("result")) {
-            result = json.getJSONObject("result");
-            error = null;
-        } else
-            throw new JSONException("error and result are null");
+            result = json.getJSONObject("result")
+            error = null
+        } else throw JSONException("error and result are null")
     }
 
-    long id;
-    JSONObject result;
-    JSONObject error;
+    var id: Long = 0
+    var result: JSONObject? = null
+    var error: JSONObject? = null
+
+    init {
+        fromJson(json)
+    }
 }
 

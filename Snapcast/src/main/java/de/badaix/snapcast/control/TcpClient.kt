@@ -15,214 +15,206 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control
 
-package de.badaix.snapcast.control;
-
-import android.util.Log;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import android.util.Log
+import java.io.BufferedReader
+import java.io.BufferedWriter
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+import java.net.InetAddress
+import java.net.Socket
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class TcpClient {
+class TcpClient(listener: TcpClientListener?) {
+    private var mServerMessage: String? = null
 
-    private static final String TAG = "TCP";
-    private String mServerMessage;
     // sends message received notifications
-    private TcpClientListener mMessageListener = null;
+    private var mMessageListener: TcpClientListener? = null
+
     // while this is true, the server will continue running
-    private boolean mRun = false;
+    private var mRun = false
+
     // used to send messages
-    private PrintWriter mBufferOut;
+    private var mBufferOut: PrintWriter? = null
+
     // used to read messages from the server
-    private BufferedReader mBufferIn;
-    private Thread readerThread = null;
-    private Socket socket = null;
-    private final BlockingQueue<String> messages = new LinkedBlockingQueue<>();
+    private var mBufferIn: BufferedReader? = null
+    private var readerThread: Thread? = null
+    private var socket: Socket? = null
+    private val messages: BlockingQueue<String?> = LinkedBlockingQueue<String?>()
 
     /**
      * Constructor of the class. OnMessagedReceived listens for the messages
      * received from server
      */
-    public TcpClient(TcpClientListener listener) {
-        mMessageListener = listener;
+    init {
+        mMessageListener = listener
     }
 
-    public boolean isConnected() {
-        if (socket == null)
-            return false;
-        return socket.isConnected();
-    }
+    val isConnected: Boolean
+        get() {
+            if (socket == null) return false
+            return socket!!.isConnected
+        }
 
     /**
      * Sends the message entered by client to the server
      *
      * @param message text entered by client
      */
-    public void sendMessage(final String message) {
-        messages.offer(message);
+    fun sendMessage(message: String?) {
+        messages.offer(message)
     }
 
     /**
      * Close the connection and release the members
      */
-    public void stop() {
-        mRun = false;
+    fun stop() {
+        mRun = false
 
         if (mBufferOut != null) {
-            mBufferOut.flush();
-            mBufferOut.close();
+            mBufferOut!!.flush()
+            mBufferOut!!.close()
         }
 
-//        mMessageListener = null;
-        readerThread.interrupt();
+        //        mMessageListener = null;
+        readerThread!!.interrupt()
         try {
-            readerThread.join(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            readerThread!!.join(1000)
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
 
-        mBufferIn = null;
-        mBufferOut = null;
-        mServerMessage = null;
+        mBufferIn = null
+        mBufferOut = null
+        mServerMessage = null
     }
 
-    public void start(final String host, final int port) {
-        ReaderRunnable readerRunnable = new ReaderRunnable(host, port);
-        readerThread = new Thread(readerRunnable);
-        readerThread.start();
+    fun start(host: String?, port: Int) {
+        val readerRunnable = ReaderRunnable(host, port)
+        readerThread = Thread(readerRunnable)
+        readerThread!!.start()
     }
 
     // Declare the interface. The method messageReceived(String message) will
     // must be implemented in the MyActivity
     // class at on asynckTask doInBackground
     interface TcpClientListener {
-        void onMessageReceived(TcpClient tcpClient, String message);
+        fun onMessageReceived(tcpClient: TcpClient?, message: String?)
 
-        void onConnecting(TcpClient tcpClient);
+        fun onConnecting(tcpClient: TcpClient?)
 
-        void onConnected(TcpClient tcpClient);
+        fun onConnected(tcpClient: TcpClient?)
 
-        void onDisconnected(TcpClient tcpClient, Exception e);
+        fun onDisconnected(tcpClient: TcpClient?, e: Exception?)
     }
 
-
-    private class WriterRunnable implements Runnable {
-        @Override
-        public void run() {
-            while (mRun) {
-                try {
-                    String message = messages.poll(50, TimeUnit.MILLISECONDS);
-                    if ((message != null) && (mBufferOut != null)) {
-                        Log.d(TAG, "Sending: " + message);
-                        mBufferOut.println(message + "\r\n");
-                        mBufferOut.flush();
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    private class ReaderRunnable implements Runnable {
-        private final String host;
-        private final int port;
-
-        ReaderRunnable(final String host, final int port) {
-            this.host = host;
-            this.port = port;
-        }
-
-        @Override
-        public void run() {
-            mRun = true;
-            Exception exception = null;
-            Thread writerThread = null;
+    private inner class ReaderRunnable(private val host: String?, private val port: Int) :
+        Runnable {
+        override fun run() {
+            mRun = true
+            var exception: Exception? = null
+            var writerThread: Thread? = null
 
             try {
-                if (mMessageListener != null)
-                    mMessageListener.onConnecting(TcpClient.this);
+                if (mMessageListener != null) mMessageListener!!.onConnecting(this@TcpClient)
 
                 // here you must put your computer's IP address.
-                InetAddress serverAddr = InetAddress.getByName(host);
+                val serverAddr = InetAddress.getByName(host)
 
-                Log.d(TAG, "Connecting to " + serverAddr.getCanonicalHostName() + ":" + port);
+                Log.d(TAG, "Connecting to " + serverAddr.getCanonicalHostName() + ":" + port)
 
                 // create a socket to make the connection with the server
-                socket = new Socket(serverAddr, port);
+                socket = Socket(serverAddr, port)
 
 
                 // sends the message to the server
-                mBufferOut = new PrintWriter(new BufferedWriter(
-                        new OutputStreamWriter(socket.getOutputStream())), true);
+                mBufferOut = PrintWriter(
+                    BufferedWriter(
+                        OutputStreamWriter(socket!!.getOutputStream())
+                    ), true
+                )
 
                 // receives the message which the server sends back
-                mBufferIn = new BufferedReader(new InputStreamReader(
-                        socket.getInputStream()));
+                mBufferIn = BufferedReader(
+                    InputStreamReader(
+                        socket!!.getInputStream()
+                    )
+                )
 
-                if (mMessageListener != null)
-                    mMessageListener.onConnected(TcpClient.this);
+                if (mMessageListener != null) mMessageListener!!.onConnected(this@TcpClient)
 
-                writerThread = new Thread(new WriterRunnable());
-                writerThread.start();
+                writerThread = Thread {
+                    while (mRun) {
+                        try {
+                            val message = messages.poll(50, TimeUnit.MILLISECONDS)
+                            if ((message != null) && (mBufferOut != null)) {
+                                Log.d(TAG, "Sending: " + message)
+                                mBufferOut!!.println(message + "\r\n")
+                                mBufferOut!!.flush()
+                            }
+                        } catch (e: InterruptedException) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+                writerThread!!.start()
 
                 // in this while the client listens for the messages sent by the
                 // server
                 while (mRun) {
-
-                    mServerMessage = mBufferIn.readLine();
+                    mServerMessage = mBufferIn!!.readLine()
 
                     if (mServerMessage != null) {
-                        Log.d(TAG, "Received Message: '" + mServerMessage + "'");
+                        Log.d(TAG, "Received Message: '" + mServerMessage + "'")
                         if (mMessageListener != null) {
-                            mMessageListener.onMessageReceived(TcpClient.this, mServerMessage);
+                            mMessageListener!!.onMessageReceived(this@TcpClient, mServerMessage)
                         }
                     } else {
-                        break;
+                        break
                     }
                 }
-
-
-            } catch (Exception e) {
-                Log.d(TAG, "Error", e);
-                exception = e;
+            } catch (e: Exception) {
+                Log.d(TAG, "Error", e)
+                exception = e
             } finally {
                 // the socket must be closed. It is not possible to reconnect to
                 // this socket
                 // after it is closed, which means a new socket instance has to
                 // be created.
-                mRun = false;
+                mRun = false
                 if (writerThread != null) {
                     try {
-                        writerThread.interrupt();
-                        writerThread.join(100);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        writerThread.interrupt()
+                        writerThread.join(100)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
                 if (socket != null) {
                     try {
-                        socket.close();
-                    } catch (Exception ignored) {
+                        socket!!.close()
+                    } catch (ignored: Exception) {
                     }
                 }
-                socket = null;
-                if (mMessageListener != null)
-                    mMessageListener.onDisconnected(TcpClient.this, exception);
+                socket = null
+                if (mMessageListener != null) mMessageListener!!.onDisconnected(
+                    this@TcpClient,
+                    exception
+                )
             }
         }
     }
 
+    companion object {
+        private const val TAG = "TCP"
+    }
 }
 

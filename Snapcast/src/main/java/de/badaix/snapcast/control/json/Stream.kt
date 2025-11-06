@@ -15,130 +15,100 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Objects;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class Stream implements JsonSerialisable {
-    private StreamUri uri;
-    private String id;
-    private Status status;
+class Stream(json: JSONObject) : JsonSerialisable {
+    var uri: StreamUri? = null
+    var id: String? = null
+    var status: Status? = null
 
-    public Stream(JSONObject json) {
-        fromJson(json);
+    init {
+        fromJson(json)
     }
 
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            if (json.has("uri") && (json.get("uri") instanceof JSONObject)) {
-                uri = new StreamUri(json.getJSONObject("uri"));
-                id = json.getString("id");
-                status = Status.fromString(json.getString("status"));
+            if (json.has("uri") && (json.get("uri") is JSONObject)) {
+                uri = StreamUri(json.getJSONObject("uri"))
+                id = json.getString("id")
+                status = Status.Companion.fromString(json.getString("status"))
             } else {
-                uri = new StreamUri(json);
-                id = json.getString("id");
-                status = Status.unknown;
+                uri = StreamUri(json)
+                id = json.getString("id")
+                status = Status.unknown
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("uri", uri.toJson());
-            json.put("id", id);
-            json.put("status", status);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("uri", uri!!.toJson())
+            json.put("id", id)
+            json.put("status", status)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
 
-        Stream stream = (Stream) o;
+        val stream = o as Stream
 
-        if (!Objects.equals(uri, stream.uri)) return false;
-        if (!Objects.equals(id, stream.id)) return false;
-        return Objects.equals(status, stream.status);
+        if (uri != stream.uri) return false
+        if (id != stream.id) return false
+        return status == stream.status
     }
 
-    @Override
-    public int hashCode() {
-        int result = uri != null ? uri.hashCode() : 0;
-        result = 31 * result + (id != null ? id.hashCode() : 0);
-        result = 31 * result + (status != null ? status.hashCode() : 0);
-        return result;
+    override fun hashCode(): Int {
+        var result = if (uri != null) uri.hashCode() else 0
+        result = 31 * result + (if (id != null) id.hashCode() else 0)
+        result = 31 * result + (if (status != null) status.hashCode() else 0)
+        return result
     }
 
-    public StreamUri getUri() {
-        return uri;
+    val name: String?
+        get() = uri!!.name
+
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    public void setUri(StreamUri uri) {
-        this.uri = uri;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public String getName() {
-        return uri.getName();
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    public enum Status {
+    enum class Status(status: String) {
         unknown("unknown"),
         idle("idle"),
         playing("playing"),
         disabled("disabled");
 
-        private final String status;
+        private val status: String?
 
-        Status(String status) {
-            this.status = status;
+        init {
+            this.status = status
         }
 
-        public static Status fromString(String status) {
-            if (status != null) {
-                for (Status s : Status.values()) {
-                    if (status.equalsIgnoreCase(s.status)) {
-                        return s;
+        companion object {
+            fun fromString(status: String?): Status? {
+                if (status != null) {
+                    for (s in entries) {
+                        if (status.equals(s.status, ignoreCase = true)) {
+                            return s
+                        }
                     }
                 }
+                return null
             }
-            return null;
         }
     }
 }

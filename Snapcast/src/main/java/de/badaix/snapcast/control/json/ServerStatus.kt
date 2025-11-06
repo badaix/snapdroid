@@ -15,186 +15,155 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Collections;
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.util.Collections
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class ServerStatus implements JsonSerialisable {
-    private final ArrayList<Group> groups = new ArrayList<Group>();
-    private final ArrayList<Stream> streams = new ArrayList<Stream>();
-    private Server server = null;
+class ServerStatus : JsonSerialisable {
+    val groups: ArrayList<Group> = ArrayList()
+    val streams: ArrayList<Stream> = ArrayList()
+    private var server: Server? = null
 
-    public ServerStatus(JSONObject json) {
-        fromJson(json);
+    constructor(json: JSONObject) {
+        fromJson(json)
     }
 
-    public ServerStatus() {
-    }
+    constructor()
 
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            clear();
-            server = new Server(json.getJSONObject("server"));
-            JSONArray jStreams = json.getJSONArray("streams");
-            for (int i = 0; i < jStreams.length(); i++)
-                streams.add(new Stream(jStreams.getJSONObject(i)));
-            JSONArray jGroups = json.getJSONArray("groups");
-            for (int i = 0; i < jGroups.length(); i++)
-                groups.add(new Group(jGroups.getJSONObject(i)));
-        } catch (JSONException e) {
-            e.printStackTrace();
+            clear()
+            server = Server(json.getJSONObject("server"))
+            val jStreams = json.getJSONArray("streams")
+            for (i in 0..<jStreams.length()) streams.add(Stream(jStreams.getJSONObject(i)))
+            val jGroups = json.getJSONArray("groups")
+            for (i in 0..<jGroups.length()) groups.add(Group(jGroups.getJSONObject(i)))
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        sort();
+        sort()
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("server", server.toJson());
-            json.put("groups", getJsonGroups());
-            json.put("streams", getJsonStreams());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("server", server!!.toJson())
+            json.put("groups", this.jsonGroups)
+            json.put("streams", this.jsonStreams)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public void sort() {
-        for (Group group : groups)
-            group.sort();
+    fun sort() {
+        for (group in groups) group.sort()
 
-        Collections.sort(groups);
+        Collections.sort<Group?>(groups)
     }
 
-    @Override
-    public String toString() {
-        return toJson().toString();
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    public void clear() {
-        groups.clear();
-        streams.clear();
+    fun clear() {
+        groups.clear()
+        streams.clear()
     }
 
-    public boolean removeClient(Client client) {
-        if (client == null)
-            return false;
+    fun removeClient(client: Client?): Boolean {
+        if (client == null) return false
 
-        for (Group group : groups) {
-            if (group.getClient(client.getId()) != null) {
-                group.removeClient(client.getId());
-                return true;
+        for (group in groups) {
+            if (group.getClient(client.id) != null) {
+                group.removeClient(client.id)
+                return true
             }
         }
-        return false;
+        return false
     }
 
-    public boolean updateClient(Client client) {
-        if (client == null)
-            return false;
+    fun updateClient(client: Client?): Boolean {
+        if (client == null) return false
 
-        for (Group group : groups) {
-            if (group.getClient(client.getId()) != null) {
-                group.updateClient(client);
-                return true;
+        for (group in groups) {
+            if (group.getClient(client.id) != null) {
+                group.updateClient(client)
+                return true
             }
         }
-        return false;
+        return false
     }
 
-    public boolean updateGroup(Group group) {
-        if (group == null)
-            return false;
+    fun updateGroup(group: Group?): Boolean {
+        if (group == null) return false
 
-        for (int i = 0; i < groups.size(); ++i) {
-            Group g = groups.get(i);
-            if (g == null)
-                continue;
+        for (i in groups.indices) {
+            val g = groups.get(i)
+            if (g == null) continue
 
-            if (group.getId().equals(g.getId())) {
-                if (g.equals(group))
-                    return false;
-                groups.set(i, group);
-                return true;
+            if (group.id == g.id) {
+                if (g == group) return false
+                groups.set(i, group)
+                return true
             }
         }
-        return false;
+        return false
     }
 
-    public boolean updateStream(Stream stream) {
-        if (stream == null)
-            return false;
+    fun updateStream(stream: Stream?): Boolean {
+        if (stream == null) return false
 
-        for (int i = 0; i < streams.size(); ++i) {
-            Stream s = streams.get(i);
-            if (s == null)
-                continue;
+        for (i in streams.indices) {
+            val s = streams.get(i)
+            if (s == null) continue
 
-            if (stream.getId().equals(s.getId())) {
-                if (s.equals(stream))
-                    return false;
-                streams.set(i, stream);
-                return true;
+            if (stream.id == s.id) {
+                if (s == stream) return false
+                streams.set(i, stream)
+                return true
             }
         }
-        streams.add(stream);
-        return true;
+        streams.add(stream)
+        return true
     }
 
-    public Client getClient(String id) {
-        for (Group group : groups) {
-            Client client = group.getClient(id);
-            if (client != null)
-                return client;
+    fun getClient(id: String?): Client? {
+        for (group in groups) {
+            val client = group.getClient(id)
+            if (client != null) return client
         }
-        return null;
+        return null
     }
 
-    public ArrayList<Group> getGroups() {
-        return groups;
+    fun getStream(id: String?): Stream? {
+        for (s in streams) if ((s != null) && (s.id == id)) return s
+        return null
     }
 
-    public ArrayList<Stream> getStreams() {
-        return streams;
+    fun getGroup(id: String?): Group? {
+        for (g in groups) if ((g != null) && (g.id == id)) return g
+        return null
     }
 
-    public Stream getStream(String id) {
-        for (Stream s : streams)
-            if ((s != null) && (s.getId().equals(id)))
-                return s;
-        return null;
-    }
+    val jsonStreams: JSONArray
+        get() {
+            val jsonArray = JSONArray()
+            for (stream in streams) jsonArray.put(stream!!.toJson())
+            return jsonArray
+        }
 
-    public Group getGroup(String id) {
-        for (Group g : groups)
-            if ((g != null) && (g.getId().equals(id)))
-                return g;
-        return null;
-    }
-
-    public JSONArray getJsonStreams() {
-        JSONArray jsonArray = new JSONArray();
-        for (Stream stream : streams)
-            jsonArray.put(stream.toJson());
-        return jsonArray;
-    }
-
-    public JSONArray getJsonGroups() {
-        JSONArray jsonArray = new JSONArray();
-        for (Group group : groups)
-            jsonArray.put(group.toJson());
-        return jsonArray;
-    }
-
+    val jsonGroups: JSONArray
+        get() {
+            val jsonArray = JSONArray()
+            for (group in groups) jsonArray.put(group.toJson())
+            return jsonArray
+        }
 }

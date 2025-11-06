@@ -45,9 +45,16 @@ import java.io.InputStreamReader
 import java.util.UUID
 import kotlin.math.max
 import androidx.core.content.edit
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SnapclientService : Service() {
     private val mBinder: IBinder = LocalBinder()
+
+    @Inject
+    lateinit var settings: Settings
+
     private var process: java.lang.Process? = null
     private var wakeLock: WakeLock? = null
     private var wifiWakeLock: WifiLock? = null
@@ -145,7 +152,7 @@ class SnapclientService : Service() {
 
     private fun startProcess() {
         Log.d(TAG, "startProcess")
-        val configuredEngine = Settings.getInstance(this).audioEngine
+        val configuredEngine = settings.audioEngine
         val player = when {
             configuredEngine == "OpenSL" -> "opensl"
             configuredEngine == "Oboe" -> "oboe"
@@ -159,7 +166,7 @@ class SnapclientService : Service() {
         val audioManager = ContextCompat.getSystemService(this, AudioManager::class.java)
             ?: throw RuntimeException("AudioManager not available")
         // boolean bta2dp = audioManager.isBluetoothA2dpOn();
-        if (Settings.getInstance(this).doResample()) {
+        if (settings.doResample()) {
             // Query the AudioManager for the native sample rate and let Snapclient to the
             // resampling using soxr's "high quality" configuration.
             // This will result in better latency estimation and thus better audio sync.
@@ -389,7 +396,3 @@ class SnapclientService : Service() {
         private const val FOREGROUND_NOTIFICATION_ID = 1
     }
 }
-
-
-
-

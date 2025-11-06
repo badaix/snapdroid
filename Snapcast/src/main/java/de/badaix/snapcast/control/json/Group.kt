@@ -15,202 +15,139 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Objects;
-
+import android.text.TextUtils
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.util.Collections
 
 /**
  * Created by johannes on 03.12.16.
  */
+class Group : JsonSerialisable, Comparable<Group?> {
+    var name: String? = ""
+    var id: String? = ""
+    var streamId: String? = ""
+    var isMuted: Boolean = false
+    val clients: ArrayList<Client> = ArrayList()
 
-public class Group implements JsonSerialisable, Comparable<Group> {
-    private String name = "";
-    private String id = "";
-    private String streamId = "";
-    private boolean muted = false;
-    private final ArrayList<Client> clients = new ArrayList<Client>();
-
-    public Group(JSONObject json) {
-        fromJson(json);
+    constructor(json: JSONObject) {
+        fromJson(json)
     }
 
-    public Group() {
-    }
+    constructor()
 
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            clients.clear();
-            name = json.getString("name");
-            id = json.getString("id");
-            streamId = json.getString("stream_id");
-            muted = json.optBoolean("muted", false);
-            JSONArray jClients = json.optJSONArray("clients");
+            clients.clear()
+            name = json.getString("name")
+            id = json.getString("id")
+            streamId = json.getString("stream_id")
+            this.isMuted = json.optBoolean("muted", false)
+            val jClients = json.optJSONArray("clients")
             if (jClients != null) {
-                for (int i = 0; i < jClients.length(); i++)
-                    clients.add(new Client(jClients.getJSONObject(i)));
+                for (i in 0..<jClients.length()) clients.add(Client(jClients.getJSONObject(i)))
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        sort();
+        sort()
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("name", name);
-            json.put("id", id);
-            json.put("stream_id", streamId);
-            json.put("muted", muted);
-            json.put("clients", getJsonClients());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("name", name)
+            json.put("id", id)
+            json.put("stream_id", streamId)
+            json.put("muted", this.isMuted)
+            json.put("clients", this.jsonClients)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public void sort() {
-        Collections.sort(clients);
+    fun sort() {
+        Collections.sort<Client?>(clients)
     }
 
-    public String getName() {
+    fun removeClient(id: String?): Boolean {
+        if (TextUtils.isEmpty(id)) return false
 
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getStreamId() {
-        return streamId;
-    }
-
-    public void setStreamId(String streamId) {
-        this.streamId = streamId;
-    }
-
-    public ArrayList<Client> getClients() {
-        return clients;
-    }
-
-    public boolean isMuted() {
-        return muted;
-    }
-
-    public void setMuted(boolean muted) {
-        this.muted = muted;
-    }
-
-    public boolean removeClient(String id) {
-        if (TextUtils.isEmpty(id))
-            return false;
-
-        for (int i = 0; i < clients.size(); ++i) {
-            if (clients.get(i).getId().equals(id)) {
-                clients.remove(i);
-                return true;
+        for (i in clients.indices) {
+            if (clients.get(i)!!.id == id) {
+                clients.removeAt(i)
+                return true
             }
         }
-        return false;
+        return false
     }
 
 
-    boolean updateClient(Client client) {
-        if (client == null)
-            return false;
+    fun updateClient(client: Client?): Boolean {
+        if (client == null) return false
 
-        for (int i = 0; i < clients.size(); ++i) {
-            Client c = clients.get(i);
-            if (c == null)
-                continue;
+        for (i in clients.indices) {
+            val c = clients[i]
 
-            if (client.getId().equals(c.getId())) {
-                if (client.equals(c))
-                    return true;
-                clients.set(i, client);
-                return true;
+            if (client.id == c.id) {
+                if (client == c) return true
+                clients[i] = client
+                return true
             }
         }
-        return false;
+        return false
     }
 
 
-    public Client getClient(String id) {
-        if (TextUtils.isEmpty(id))
-            return null;
+    fun getClient(id: String?): Client? {
+        if (TextUtils.isEmpty(id)) return null
 
-        for (Client c : clients) {
-            if (c == null)
-                continue;
+        for (c in clients) {
+            if (c == null) continue
 
-            if (id.equals(c.getId()))
-                return c;
+            if (id == c.id) return c
         }
-        return null;
+        return null
     }
 
-    public JSONArray getJsonClients() {
-        JSONArray jsonArray = new JSONArray();
-        for (Client client : clients)
-            jsonArray.put(client.toJson());
-        return jsonArray;
+    val jsonClients: JSONArray
+        get() {
+            val jsonArray = JSONArray()
+            for (client in clients) jsonArray.put(client!!.toJson())
+            return jsonArray
+        }
+
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
+
+        val group = o as Group
+
+        if (name != group.name) return false
+        if (id != group.id) return false
+        if (this.isMuted != group.isMuted) return false
+        if (streamId != group.streamId) return false
+        return clients == group.clients
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Group group = (Group) o;
-
-        if (!Objects.equals(name, group.name)) return false;
-        if (!Objects.equals(id, group.id)) return false;
-        if (muted != group.muted) return false;
-        if (!Objects.equals(streamId, group.streamId))
-            return false;
-        return Objects.equals(clients, group.clients);
-
+    override fun hashCode(): Int {
+        var result = if (name != null) name.hashCode() else 0
+        result = 31 * result + (if (id != null) id.hashCode() else 0)
+        result = 31 * result + (if (streamId != null) streamId.hashCode() else 0)
+        result = 31 * result + (if (this.isMuted) 1 else 0)
+        result = 31 * result + (if (clients != null) clients.hashCode() else 0)
+        return result
     }
 
-    @Override
-    public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (id != null ? id.hashCode() : 0);
-        result = 31 * result + (streamId != null ? streamId.hashCode() : 0);
-        result = 31 * result + (muted ? 1 : 0);
-        result = 31 * result + (clients != null ? clients.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public int compareTo(@NonNull Group another) {
-        if (getClients().isEmpty())
-            return -1;
-        if (another.getClients().isEmpty())
-            return 1;
-        return getClients().get(0).compareTo(another.getClients().get(0));
+    override fun compareTo(other: Group?): Int {
+        if (other == null) return 1
+        if (this.clients.isEmpty()) return -1
+        if (other.clients.isEmpty()) return 1
+        return this.clients[0].compareTo(other.clients[0])
     }
 }

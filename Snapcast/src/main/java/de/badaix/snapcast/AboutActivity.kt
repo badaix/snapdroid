@@ -15,37 +15,37 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast
 
-package de.badaix.snapcast;
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.view.View
+import android.webkit.WebView
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.webkit.WebView;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.material.snackbar.Snackbar;
-
-public class AboutActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_about);
+class AboutActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_about)
         try {
-            getSupportActionBar().setTitle(getString(R.string.about) + " Snapcast");
-        } catch (Exception e) {
-            Snackbar.make(findViewById(R.id.webView), getText(R.string.action_bar_failed), Snackbar.LENGTH_LONG);
+            supportActionBar!!.title = getString(R.string.about) + " Snapcast"
+        } catch (e: Exception) {
+            Snackbar.make(
+                findViewById(R.id.webView),
+                getText(R.string.action_bar_failed),
+                Snackbar.LENGTH_LONG
+            ).show()
         }
-        PackageInfo pInfo;
+        val pInfo: PackageInfo
         try {
-            pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-            getSupportActionBar().setSubtitle("v" + pInfo.versionName);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            pInfo = packageManager.getPackageInfo(packageName, 0)
+            supportActionBar!!.subtitle = "v" + pInfo.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
         }
-        WebView wv = findViewById(R.id.webView);
-        wv.loadUrl("file:///android_asset/" + this.getText(R.string.about_file));
+        val wv = findViewById<WebView>(R.id.webView)
+        wv.loadUrl("file:///android_asset/" + this.getText(R.string.about_file))
     }
 }

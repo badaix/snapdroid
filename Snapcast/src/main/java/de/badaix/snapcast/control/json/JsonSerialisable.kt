@@ -15,16 +15,15 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONObject;
+import org.json.JSONObject
 
 /**
  * Created by johannes on 08.01.16.
  */
-public interface JsonSerialisable {
-    void fromJson(JSONObject json);
+interface JsonSerialisable {
+    fun fromJson(json: JSONObject?)
 
-    JSONObject toJson();
+    fun toJson(): JSONObject?
 }

@@ -15,91 +15,67 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class Time_t implements JsonSerialisable {
-    private long sec = 0;
-    private long usec = 0;
+class Time_t : JsonSerialisable {
+    var sec: Long = 0
+    var usec: Long = 0
 
-    public Time_t() {
+    constructor()
 
+    constructor(json: JSONObject) {
+        fromJson(json)
     }
 
-    public Time_t(JSONObject json) {
-        fromJson(json);
+    constructor(sec: Long, usec: Long) {
+        this.sec = sec
+        this.usec = usec
     }
 
-    public Time_t(long sec, long usec) {
-        this.sec = sec;
-        this.usec = usec;
-    }
-
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            sec = json.getLong("sec");
-            usec = json.getLong("usec");
-        } catch (JSONException e) {
-            e.printStackTrace();
+            sec = json.getLong("sec")
+            usec = json.getLong("usec")
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("sec", sec);
-            json.put("usec", usec);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("sec", sec)
+            json.put("usec", usec)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public long getSec() {
-        return sec;
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    public void setSec(long sec) {
-        this.sec = sec;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
+
+        val time_t = o as Time_t
+
+        if (sec != time_t.sec) return false
+        return usec == time_t.usec
     }
 
-    public long getUsec() {
-        return usec;
-    }
-
-    public void setUsec(long usec) {
-        this.usec = usec;
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Time_t time_t = (Time_t) o;
-
-        if (sec != time_t.sec) return false;
-        return usec == time_t.usec;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) sec;
-        result = (int) (31 * result + usec);
-        return result;
+    override fun hashCode(): Int {
+        var result = sec.toInt()
+        result = (31 * result + usec).toInt()
+        return result
     }
 }

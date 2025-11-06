@@ -22,53 +22,46 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.text.TextUtils
 import de.badaix.snapcast.utils.Settings
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class BootCompletedReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var settings: Settings
+
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            "android.intent.action.BOOT_COMPLETED" -> {
-                if (Settings.getInstance(context).isAutostart) {
-                    startService(context, SnapclientService.ACTION_START)
+            Intent.ACTION_BOOT_COMPLETED -> {
+                if (settings.isAutostart) {
+                    startSnapclient(context)
                 }
             }
-
-            "de.badaix.snapcast.START_SERVICE" -> {
-                startService(
-                    context,
-                    SnapclientService.ACTION_START
-                )
-            }
-
-            "de.badaix.snapcast.STOP_SERVICE" -> {
-                startService(
-                    context,
-                    SnapclientService.ACTION_STOP
-                )
-            }
+            ACTION_START_SERVICE -> startSnapclient(context)
+            ACTION_STOP_SERVICE -> context.stopService(Intent(context, SnapclientService::class.java))
         }
     }
 
-    private fun startService(context: Context, action: String?) {
-        val intent = Intent(context, SnapclientService::class.java)
-            .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            .setAction(action)
-
-        if (action === SnapclientService.ACTION_START) {
-            val host = Settings.getInstance(context).host
-            val port = Settings.getInstance(context).streamPort
-            if (TextUtils.isEmpty(host)) return
-
-            intent.putExtra(SnapclientService.EXTRA_HOST, host)
-            intent.putExtra(SnapclientService.EXTRA_PORT, port)
-        }
+    private fun startSnapclient(context: Context) {
+        val i = Intent(context, SnapclientService::class.java)
+        i.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        val host = settings.host
+        val port = settings.streamPort
+        i.putExtra(SnapclientService.EXTRA_HOST, host)
+        i.putExtra(SnapclientService.EXTRA_PORT, port)
+        i.action = SnapclientService.ACTION_START
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent)
+            context.startForegroundService(i)
         } else {
-            context.startService(intent)
+            context.startService(i)
         }
     }
-}
 
+    companion object {
+        const val ACTION_START_SERVICE = "de.badaix.snapcast.START_SERVICE"
+        const val ACTION_STOP_SERVICE = "de.badaix.snapcast.STOP_SERVICE"
+    }
+}

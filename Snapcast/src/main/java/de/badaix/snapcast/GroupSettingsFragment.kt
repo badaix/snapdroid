@@ -15,148 +15,133 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast
 
-package de.badaix.snapcast;
-
-import android.os.Bundle;
-import android.preference.CheckBoxPreference;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.PreferenceCategory;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceScreen;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
-import de.badaix.snapcast.control.json.Client;
-import de.badaix.snapcast.control.json.Group;
-import de.badaix.snapcast.control.json.ServerStatus;
-import de.badaix.snapcast.control.json.Stream;
+import android.os.Bundle
+import android.preference.CheckBoxPreference
+import android.preference.ListPreference
+import android.preference.Preference
+import android.preference.Preference.OnPreferenceChangeListener
+import android.preference.PreferenceCategory
+import android.preference.PreferenceFragment
+import de.badaix.snapcast.control.json.Group
+import de.badaix.snapcast.control.json.ServerStatus
+import org.json.JSONException
+import org.json.JSONObject
+import java.util.Collections
 
 /**
  * Created by johannes on 06.12.16.
  */
-
-public class GroupSettingsFragment extends PreferenceFragment {
-
+class GroupSettingsFragment : PreferenceFragment() {
     //private static final String TAG = "GroupSettingsFragment";
+    private var prefStreams: ListPreference? = null
+    var group: Group? = null
+        private set
+    private var serverStatus: ServerStatus? = null
+    private var prefCatClients: PreferenceCategory? = null
 
-    private ListPreference prefStreams;
-    private Group group = null;
-    private ServerStatus serverStatus = null;
-    private PreferenceCategory prefCatClients = null;
+    private var oldClients = ""
+    private var oldStream = ""
 
-    private String oldClients = "";
-    private String oldStream = "";
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
         // Load the preferences from an XML resource
-        addPreferencesFromResource(R.xml.group_preferences);
-        PreferenceScreen screen = this.getPreferenceScreen();
+        addPreferencesFromResource(R.xml.group_preferences)
+        val screen = this.getPreferenceScreen()
 
-        prefStreams = (ListPreference) findPreference("pref_stream");
+        prefStreams = findPreference("pref_stream") as ListPreference
 
-        Bundle bundle = getArguments();
+        val bundle = getArguments()
         try {
-            group = new Group(new JSONObject(bundle.getString("group")));
-            serverStatus = new ServerStatus(new JSONObject(bundle.getString("serverStatus")));
-        } catch (JSONException e) {
-            e.printStackTrace();
+            group = Group(JSONObject(bundle.getString("group")))
+            serverStatus = ServerStatus(JSONObject(bundle.getString("serverStatus")))
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
 
-        final ArrayList<Stream> streams = serverStatus.getStreams();
-        final CharSequence[] streamNames = new CharSequence[streams.size()];
-        final CharSequence[] streamIds = new CharSequence[streams.size()];
-        for (int i = 0; i < streams.size(); ++i) {
-            streamNames[i] = streams.get(i).getName();
-            streamIds[i] = streams.get(i).getId();
+        val streams = serverStatus!!.streams
+        val streamNames = arrayOfNulls<CharSequence>(streams.size)
+        val streamIds = arrayOfNulls<CharSequence>(streams.size)
+        for (i in streams.indices) {
+            streamNames[i] = streams.get(i)!!.name
+            streamIds[i] = streams.get(i)!!.id
         }
 
-        prefStreams.setEntries(streamNames);
-        prefStreams.setEntryValues(streamIds);
+        prefStreams!!.setEntries(streamNames)
+        prefStreams!!.setEntryValues(streamIds)
 
-        for (int i = 0; i < streams.size(); ++i) {
-            if (streamIds[i].equals(group.getStreamId())) {
-                prefStreams.setTitle(streamNames[i]);
-                prefStreams.setValueIndex(i);
-                oldStream = prefStreams.getValue();
-                break;
+        for (i in streams.indices) {
+            if (streamIds[i] == group!!.streamId) {
+                prefStreams!!.setTitle(streamNames[i])
+                prefStreams!!.setValueIndex(i)
+                oldStream = prefStreams!!.getValue()
+                break
             }
         }
 
-        prefStreams.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                for (int i = 0; i < streams.size(); ++i) {
-                    if (streamIds[i].equals(newValue)) {
-                        prefStreams.setTitle(streamNames[i]);
-//                        client.getConfig().setStream(streamIds[i].toString());
-                        prefStreams.setValueIndex(i);
-                        break;
+        prefStreams!!.setOnPreferenceChangeListener(object : OnPreferenceChangeListener {
+            override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
+                for (i in streams.indices) {
+                    if (streamIds[i] == newValue) {
+                        prefStreams!!.setTitle(streamNames[i])
+                        //                        client.config!!.setStream(streamIds[i].toString());
+                        prefStreams!!.setValueIndex(i)
+                        break
                     }
                 }
 
-                return false;
+                return false
             }
-        });
+        })
 
 
-        prefCatClients = (PreferenceCategory) findPreference("pref_cat_clients");
-        ArrayList<CheckBoxPreference> allClients = new ArrayList<>();
-        for (Group g : serverStatus.getGroups()) {
-            for (Client client : g.getClients()) {
-                CheckBoxPreference checkBoxPref = new CheckBoxPreference(screen.getContext());
-                checkBoxPref.setKey(client.getId());
-                checkBoxPref.setTitle(client.getVisibleName());
-                checkBoxPref.setChecked(g.getId().equals(group.getId()));
-                checkBoxPref.setPersistent(false);
-                allClients.add(checkBoxPref);
+        prefCatClients = findPreference("pref_cat_clients") as PreferenceCategory?
+        val allClients = java.util.ArrayList<CheckBoxPreference?>()
+        for (g in serverStatus!!.groups) {
+            for (client in g.clients) {
+                val checkBoxPref = CheckBoxPreference(screen.getContext())
+                checkBoxPref.setKey(client.id)
+                checkBoxPref.setTitle(client.visibleName)
+                checkBoxPref.setChecked(g.id == group!!.id)
+                checkBoxPref.setPersistent(false)
+                allClients.add(checkBoxPref)
             }
         }
-        Collections.sort(allClients, new Comparator<CheckBoxPreference>() {
-            @Override
-            public int compare(CheckBoxPreference lhs, CheckBoxPreference rhs) {
-                return lhs.getTitle().toString().compareToIgnoreCase(rhs.getTitle().toString());
+        Collections.sort<CheckBoxPreference?>(allClients, object : Comparator<CheckBoxPreference?> {
+            override fun compare(lhs: CheckBoxPreference?, rhs: CheckBoxPreference?): Int {
+                if (lhs == null || rhs == null) return 0
+                return lhs.getTitle().toString()
+                    .compareTo(rhs.getTitle().toString(), ignoreCase = true)
             }
-        });
-        for (CheckBoxPreference pref : allClients)
-            prefCatClients.addPreference(pref);
+        })
+        for (pref in allClients) prefCatClients!!.addPreference(pref)
 
-        oldClients = getClients().toString();
+        oldClients = this.clients.toString()
     }
 
-    public ArrayList<String> getClients() {
-        ArrayList<String> clients = new ArrayList<>();
-        for (int i = 0; i < prefCatClients.getPreferenceCount(); ++i) {
-            CheckBoxPreference checkBoxPref = (CheckBoxPreference) prefCatClients.getPreference(i);
-            if (checkBoxPref.isChecked())
-                clients.add(checkBoxPref.getKey());
+    val clients: ArrayList<String?>
+        get() {
+            val clients =
+                java.util.ArrayList<String?>()
+            for (i in 0..<prefCatClients!!.getPreferenceCount()) {
+                val checkBoxPref =
+                    prefCatClients!!.getPreference(i) as CheckBoxPreference
+                if (checkBoxPref.isChecked()) clients.add(checkBoxPref.getKey())
+            }
+            return clients
         }
-        return clients;
-    }
 
 
-    public boolean didStreamChange() {
-        return !oldStream.equals(prefStreams.getValue());
+    fun didStreamChange(): Boolean {
+        return oldStream != prefStreams!!.getValue()
     }
 
-    public boolean didClientsChange() {
-        return !oldClients.equalsIgnoreCase(getClients().toString());
+    fun didClientsChange(): Boolean {
+        return !oldClients.equals(this.clients.toString(), ignoreCase = true)
     }
 
-    public String getStream() {
-        return prefStreams.getValue();
-    }
-
-    public Group getGroup() {
-        return group;
-    }
+    val stream: String
+        get() = prefStreams!!.getValue()
 }

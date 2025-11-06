@@ -15,88 +15,76 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Objects;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 02.03.16.
  */
-public class Server implements JsonSerialisable {
-    private Host host;
-    private Snapserver snapserver;
+class Server(json: JSONObject) : JsonSerialisable {
+    var host: Host? = null
+        private set
+    private var snapserver: Snapserver? = null
 
-    public Server(JSONObject json) {
-        fromJson(json);
+    init {
+        fromJson(json)
     }
 
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            if (json.has("host") && !(json.get("host") instanceof String))
-                host = new Host(json.getJSONObject("host"));
+            if (json.has("host") && json.get("host") !is String) host =
+                Host(json.getJSONObject("host"))
             else {
-                host = new Host();
-                host.name = json.getString("host");
+                host = Host()
+                host!!.name = json.getString("host")
             }
 
-            if (json.has("snapserver"))
-                snapserver = new Snapserver(json.getJSONObject("snapserver"));
+            if (json.has("snapserver")) snapserver = Snapserver(json.getJSONObject("snapserver"))
             else {
-                snapserver = new Snapserver();
-                snapserver.version = json.getString("version");
+                snapserver = Snapserver()
+                snapserver!!.version = json.getString("version")
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("host", host.toJson());
-            json.put("snapserver", snapserver.toJson());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("host", host!!.toJson())
+            json.put("snapserver", snapserver!!.toJson())
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public Host getHost() {
-        return host;
+    fun getSnapserver(): Snapcast? {
+        return snapserver
     }
 
-    public Snapcast getSnapserver() {
-        return snapserver;
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    @Override
-    public String toString() {
-        return toJson().toString();
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
+
+        val server = o as Server
+
+        if (host != server.host) return false
+        return snapserver == server.snapserver
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Server server = (Server) o;
-
-        if (!Objects.equals(host, server.host)) return false;
-        return Objects.equals(snapserver, server.snapserver);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = host != null ? host.hashCode() : 0;
-        result = 31 * result + (snapserver != null ? snapserver.hashCode() : 0);
-        return result;
+    override fun hashCode(): Int {
+        var result = if (host != null) host.hashCode() else 0
+        result = 31 * result + (if (snapserver != null) snapserver.hashCode() else 0)
+        return result
     }
 }
 

@@ -15,57 +15,53 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast
 
-package de.badaix.snapcast;
-
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.MenuItem;
-
-import androidx.activity.OnBackPressedCallback;
-import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent
+import android.os.Bundle
+import android.view.MenuItem
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
 
 /**
  * Created by johannes on 06.12.16.
  */
+class GroupSettingsActivity : AppCompatActivity() {
+    private var groupSettingsFragment: GroupSettingsFragment? = null
 
-public class GroupSettingsActivity extends AppCompatActivity {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-    private GroupSettingsFragment groupSettingsFragment;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        groupSettingsFragment = new GroupSettingsFragment();
-        groupSettingsFragment.setArguments(getIntent().getExtras());
+        groupSettingsFragment = GroupSettingsFragment()
+        groupSettingsFragment!!.setArguments(getIntent().getExtras())
         // Display the fragment as the main content.
         getFragmentManager().beginTransaction()
-                .replace(android.R.id.content, groupSettingsFragment).commit();
+            .replace(android.R.id.content, groupSettingsFragment).commit()
 
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Intent intent = new Intent();
-                intent.putExtra("group", groupSettingsFragment.getGroup().getId());
-                if (groupSettingsFragment.didStreamChange())
-                    intent.putExtra("stream", groupSettingsFragment.getStream());
-                if (groupSettingsFragment.didClientsChange())
-                    intent.putStringArrayListExtra("clients", groupSettingsFragment.getClients());
-                setResult(Activity.RESULT_OK, intent);
-                finish();
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val intent = Intent()
+                intent.putExtra("group", groupSettingsFragment!!.group!!.id)
+                if (groupSettingsFragment!!.didStreamChange()) intent.putExtra(
+                    "stream",
+                    groupSettingsFragment!!.stream
+                )
+                if (groupSettingsFragment!!.didClientsChange()) intent.putStringArrayListExtra(
+                    "clients",
+                    groupSettingsFragment!!.clients
+                )
+                setResult(RESULT_OK, intent)
+                finish()
             }
-        });
+        })
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
+            onBackPressed()
+            return true
         }
-        return false;
+        return false
     }
 }
 

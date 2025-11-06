@@ -15,408 +15,401 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control
 
-package de.badaix.snapcast.control;
-
-import android.util.Log;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import de.badaix.snapcast.control.json.Client;
-import de.badaix.snapcast.control.json.Group;
-import de.badaix.snapcast.control.json.ServerStatus;
-import de.badaix.snapcast.control.json.Stream;
-import de.badaix.snapcast.control.json.Volume;
+import android.util.Log
+import de.badaix.snapcast.control.TcpClient.TcpClientListener
+import de.badaix.snapcast.control.json.Client
+import de.badaix.snapcast.control.json.Group
+import de.badaix.snapcast.control.json.ServerStatus
+import de.badaix.snapcast.control.json.Stream
+import de.badaix.snapcast.control.json.Volume
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 13.01.16.
  */
-public class RemoteControl implements TcpClient.TcpClientListener {
-
-    public enum RPCEvent {
+class RemoteControl(private val listener: RemoteControlListener?) : TcpClientListener {
+    enum class RPCEvent {
         response,
         notification
     }
 
-    private static final String TAG = "RC";
+    private var tcpClient: TcpClient? = null
+    private var msgId: Long = 0
+    var host: String? = null
+        private set
+    var port: Int = 0
+        private set
+    private val pendingRequests: HashMap<Long?, String?>
 
-    private TcpClient tcpClient;
-    private long msgId;
-    private final RemoteControlListener listener;
-    private String host;
-    private int port;
-    private final HashMap<Long, String> pendingRequests;
-
-    public RemoteControl(RemoteControlListener listener) {
-        this.listener = listener;
-        msgId = 0;
-        pendingRequests = new HashMap<>();
+    init {
+        pendingRequests = HashMap<Long?, String?>()
     }
 
-    public String getHost() {
-        return host;
-    }
-
-
-    public int getPort() {
-        return port;
-    }
-
-
-    public synchronized void connect(final String host, final int port) {
-        if ((tcpClient != null) && tcpClient.isConnected()) {
-            if (this.host.equals(host) && (this.port == port))
-                return;
-            else
-                disconnect();
+    @Synchronized
+    fun connect(host: String, port: Int) {
+        if ((tcpClient != null) && tcpClient!!.isConnected) {
+            if (this.host == host && (this.port == port)) return
+            else disconnect()
         }
-        this.host = host;
-        this.port = port;
+        this.host = host
+        this.port = port
 
-        tcpClient = new TcpClient(this);
-        tcpClient.start(host, port);
+        tcpClient = TcpClient(this)
+        tcpClient!!.start(host, port)
     }
 
-    public void disconnect() {
-        if ((tcpClient != null) && (tcpClient.isConnected()))
-            tcpClient.stop();
-        tcpClient = null;
-        pendingRequests.clear();
+    fun disconnect() {
+        if ((tcpClient != null) && (tcpClient!!.isConnected)) tcpClient!!.stop()
+        tcpClient = null
+        pendingRequests.clear()
     }
 
-    public boolean isConnected() {
-        return ((tcpClient != null) && tcpClient.isConnected());
-    }
+    val isConnected: Boolean
+        get() = ((tcpClient != null) && tcpClient!!.isConnected)
 
-    @Override
-    public void onMessageReceived(TcpClient tcpClient, String message) {
+    override fun onMessageReceived(tcpClient: TcpClient?, message: String?) {
+        if (message == null) return
         try {
-            if (message.trim().startsWith("[")) {
-                JSONArray jsonArray = new JSONArray(message);
-                for (int i = 0; i < jsonArray.length(); ++i) {
-                    JSONObject json = jsonArray.getJSONObject(i);
-                    processJson(json);
+            if (message.trim { it <= ' ' }.startsWith("[")) {
+                val jsonArray = JSONArray(message)
+                for (i in 0..<jsonArray.length()) {
+                    val json = jsonArray.getJSONObject(i)
+                    processJson(json)
                 }
             } else {
-                JSONObject json = new JSONObject(message);
-                processJson(json);
+                val json = JSONObject(message)
+                processJson(json)
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    private void processJson(JSONObject json) {
+    private fun processJson(json: JSONObject) {
 //        Log.d(TAG, "Msg received: " + message);
         try {
-
             if (json.has("id")) {
-                /// Response
-                RPCResponse response = new RPCResponse(json);
-//                Log.d(TAG, "ID: " + json.getString("id"));
-                RPCRequest request = null;
-                synchronized (pendingRequests) {
+                /** Response */
+                val response = RPCResponse(json)
+                //                Log.d(TAG, "ID: " + json.getString("id"));
+                var request: RPCRequest? = null
+                synchronized(pendingRequests) {
                     if (pendingRequests.containsKey(response.id)) {
-                        request = new RPCRequest(new JSONObject(pendingRequests.get(response.id)));
-                        Log.d(TAG, "Response to: " + request.method);
-                        pendingRequests.remove(response.id);
+                        request = RPCRequest(JSONObject(pendingRequests.get(response.id)))
+                        Log.d(TAG, "Response to: " + request.method)
+                        pendingRequests.remove(response.id)
                     }
                 }
 
-                if (listener == null)
-                    return;
+                if (listener == null) return
 
                 if (json.has("error")) {
-                    JSONObject error = json.getJSONObject("error");
-                    Log.e(TAG, "error " + error.getInt("code") + ": " + error.getString("message") + "; data: " + error.getString("data"));
+                    val error = json.getJSONObject("error")
+                    Log.e(
+                        TAG,
+                        "error " + error.getInt("code") + ": " + error.getString("message") + "; data: " + error.getString(
+                            "data"
+                        )
+                    )
                 }
 
                 if (request == null) {
-                    Log.e(TAG, "request for id " + response.id + " not found");
-                    return;
+                    Log.e(TAG, "request for id " + response.id + " not found")
+                    return
                 }
 
-                RPCEvent rpcEvent = RPCEvent.response;
-                /// Response to a "Object.GetStatus" message
-                if (request.method.equals("Client.GetStatus")) {
-                    listener.onUpdate(new Client(response.result.getJSONObject("client")));
-                } else if (request.method.equals("Client.SetVolume")) {
-                } else if (request.method.equals("Client.SetLatency")) {
-                } else if (request.method.equals("Client.SetName")) {
-                } else if (request.method.equals("Group.GetStatus")) {
-                    listener.onUpdate(new Group(response.result.getJSONObject("group")));
-                } else if (request.method.equals("Group.SetMute")) {
-//                    listener.onMute(rpcEvent, request.params.getString("id"), response.result.getBoolean("mute"));
-                } else if (request.method.equals("Group.SetStream")) {
-                } else if (request.method.equals("Group.SetClients")) {
-                    listener.onUpdate(new ServerStatus(response.result.getJSONObject("server")));
-                } else if (request.method.equals("Server.GetStatus")) {
-                    listener.onUpdate(new ServerStatus(response.result.getJSONObject("server")));
-                } else if (request.method.equals("Server.DeleteClient")) {
-                    listener.onUpdate(new ServerStatus(response.result.getJSONObject("server")));
+                val rpcEvent = RPCEvent.response
+                /** Response to a "Object.GetStatus" message */
+                if (request.method == "Client.GetStatus") {
+                    listener.onUpdate(Client(response.result!!.getJSONObject("client")))
+                } else if (request.method == "Client.SetVolume") {
+                } else if (request.method == "Client.SetLatency") {
+                } else if (request.method == "Client.SetName") {
+                } else if (request.method == "Group.GetStatus") {
+                    listener.onUpdate(Group(response.result!!.getJSONObject("group")))
+                } else if (request.method == "Group.SetMute") {
+//                    listener.onMute(rpcEvent, request.params!!.getString("id"), response.result!!.getBoolean("mute"));
+                } else if (request.method == "Group.SetStream") {
+                } else if (request.method == "Group.SetClients") {
+                    listener.onUpdate(ServerStatus(response.result!!.getJSONObject("server")))
+                } else if (request.method == "Server.GetStatus") {
+                    listener.onUpdate(ServerStatus(response.result!!.getJSONObject("server")))
+                } else if (request.method == "Server.DeleteClient") {
+                    listener.onUpdate(ServerStatus(response.result!!.getJSONObject("server")))
                 }
             } else {
-                /// Notification
-                if (listener == null)
-                    return;
-                RPCEvent rpcEvent = RPCEvent.notification;
-                RPCNotification notification = new RPCNotification(json);
+                /** Notification */
+                if (listener == null) return
+                val rpcEvent = RPCEvent.notification
+                val notification = RPCNotification(json)
 
-                if (notification.method.equals("Client.OnConnect")) {
-                    listener.onConnect(new Client(notification.params.getJSONObject("client")));
-                } else if (notification.method.equals("Client.OnDisconnect")) {
-                    listener.onDisconnect(notification.params.getString("id"));
-                } else if (notification.method.equals("Client.OnVolumeChanged")) {
-                    listener.onVolumeChanged(rpcEvent, notification.params.getString("id"), new Volume(notification.params.getJSONObject("volume")));
-                } else if (notification.method.equals("Client.OnLatencyChanged")) {
-                    listener.onLatencyChanged(rpcEvent, notification.params.getString("id"), notification.params.getInt("latency"));
-                } else if (notification.method.equals("Client.OnNameChanged")) {
-                    listener.onNameChanged(rpcEvent, notification.params.getString("id"), notification.params.getString("name"));
-                } else if (notification.method.equals("Group.OnMute")) {
-                    listener.onMute(rpcEvent, notification.params.getString("id"), notification.params.getBoolean("mute"));
-                } else if (notification.method.equals("Group.OnStreamChanged")) {
-                    listener.onStreamChanged(rpcEvent, notification.params.getString("id"), notification.params.getString("stream_id"));
-                } else if (notification.method.equals("Stream.OnUpdate")) {
-                    listener.onUpdate(notification.params.getString("id"), new Stream(notification.params.getJSONObject("stream")));
-                } else if (notification.method.equals("Group.OnUpdate")) {
-                    listener.onUpdate(new Group(notification.params.getJSONObject("group")));
-                } else if (notification.method.equals("Server.OnUpdate")) {
-                    listener.onUpdate(new ServerStatus(notification.params.getJSONObject("server")));
+                if (notification.method == "Client.OnConnect") {
+                    listener.onConnect(Client(notification.params!!.getJSONObject("client")))
+                } else if (notification.method == "Client.OnDisconnect") {
+                    listener.onDisconnect(notification.params!!.getString("id"))
+                } else if (notification.method == "Client.OnVolumeChanged") {
+                    listener.onVolumeChanged(
+                        rpcEvent,
+                        notification.params!!.getString("id"),
+                        Volume(notification.params!!.getJSONObject("volume"))
+                    )
+                } else if (notification.method == "Client.OnLatencyChanged") {
+                    listener.onLatencyChanged(
+                        rpcEvent,
+                        notification.params!!.getString("id"),
+                        notification.params!!.getInt("latency").toLong()
+                    )
+                } else if (notification.method == "Client.OnNameChanged") {
+                    listener.onNameChanged(
+                        rpcEvent,
+                        notification.params!!.getString("id"),
+                        notification.params!!.getString("name")
+                    )
+                } else if (notification.method == "Group.OnMute") {
+                    listener.onMute(
+                        rpcEvent,
+                        notification.params!!.getString("id"),
+                        notification.params!!.getBoolean("mute")
+                    )
+                } else if (notification.method == "Group.OnStreamChanged") {
+                    listener.onStreamChanged(
+                        rpcEvent,
+                        notification.params!!.getString("id"),
+                        notification.params!!.getString("stream_id")
+                    )
+                } else if (notification.method == "Stream.OnUpdate") {
+                    listener.onUpdate(
+                        notification.params!!.getString("id"),
+                        Stream(notification.params!!.getJSONObject("stream"))
+                    )
+                } else if (notification.method == "Group.OnUpdate") {
+                    listener.onUpdate(Group(notification.params!!.getJSONObject("group")))
+                } else if (notification.method == "Server.OnUpdate") {
+                    listener.onUpdate(ServerStatus(notification.params!!.getJSONObject("server")))
                 }
             }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public void onConnecting(TcpClient tcpClient) {
-        Log.d(TAG, "onConnecting");
-        if (listener != null)
-            listener.onConnecting(this);
+    override fun onConnecting(tcpClient: TcpClient?) {
+        Log.d(TAG, "onConnecting")
+        if (listener != null) listener.onConnecting(this)
     }
 
-    @Override
-    public void onConnected(TcpClient tcpClient) {
-        Log.d(TAG, "onConnected");
-        if (listener != null)
-            listener.onConnected(this);
+    override fun onConnected(tcpClient: TcpClient?) {
+        Log.d(TAG, "onConnected")
+        if (listener != null) listener.onConnected(this)
     }
 
-    @Override
-    public void onDisconnected(TcpClient tcpClient, Exception e) {
-        Log.d(TAG, "onDisconnected");
-        if (listener != null)
-            listener.onDisconnected(this, e);
+    override fun onDisconnected(tcpClient: TcpClient?, e: Exception?) {
+        Log.d(TAG, "onDisconnected")
+        if (listener != null) listener.onDisconnected(this, e)
     }
 
-    private RPCRequest jsonRequest(String method, JSONObject params) {
-        RPCRequest request = new RPCRequest(method, msgId, params);
-        synchronized (pendingRequests) {
-            pendingRequests.put(msgId, request.toString());
+    private fun jsonRequest(method: String?, params: JSONObject?): RPCRequest {
+        val request = RPCRequest(method, msgId, params)
+        synchronized(pendingRequests) {
+            pendingRequests.put(msgId, request.toString())
         }
-        msgId++;
-        return request;
+        msgId++
+        return request
     }
 
-    public void getServerStatus() {
-        RPCRequest request = jsonRequest("Server.GetStatus", null);
-        if (isConnected())
-            tcpClient.sendMessage(request.toString());
-    }
+    val serverStatus: Unit
+        get() {
+            val request = jsonRequest("Server.GetStatus", null)
+            if (this.isConnected) tcpClient!!.sendMessage(request.toString())
+        }
 
-    public void setName(Client client, String name) {
+    fun setName(client: Client, name: String?) {
         try {
-            JSONObject params = new JSONObject();
-            params.put("id", client.getId());
-            params.put("name", name);
-            RPCRequest request = jsonRequest("Client.SetName", params);
-            if (isConnected())
-                tcpClient.sendMessage(request.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            val params = JSONObject()
+            params!!.put("id", client.id)
+            params!!.put("name", name)
+            val request = jsonRequest("Client.SetName", params)
+            if (this.isConnected) tcpClient!!.sendMessage(request.toString())
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    public void setLatency(Client client, int latency) {
+    fun setLatency(client: Client, latency: Int) {
         try {
-            JSONObject params = new JSONObject();
-            params.put("id", client.getId());
-            params.put("latency", latency);
-            RPCRequest request = jsonRequest("Client.SetLatency", params);
-            if (isConnected())
-                tcpClient.sendMessage(request.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            val params = JSONObject()
+            params!!.put("id", client.id)
+            params!!.put("latency", latency)
+            val request = jsonRequest("Client.SetLatency", params)
+            if (this.isConnected) tcpClient!!.sendMessage(request.toString())
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    public void setStream(Group group, String id) {
-        setStream(group.getId(), id);
+    fun setStream(group: Group, id: String?) {
+        setStream(group.id, id)
     }
 
-    public void setClients(String groupId, ArrayList<String> clientIds) {
+    fun setClients(groupId: String?, clientIds: ArrayList<String?>) {
         try {
-            JSONArray clients = new JSONArray();
-            for (String clientId : clientIds)
-                clients.put(clientId);
-            JSONObject params = new JSONObject();
-            params.put("id", groupId);
-            params.put("clients", clients);
-            RPCRequest request = jsonRequest("Group.SetClients", params);
-            if (isConnected())
-                tcpClient.sendMessage(request.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            val clients = JSONArray()
+            for (clientId in clientIds) clients.put(clientId)
+            val params = JSONObject()
+            params!!.put("id", groupId)
+            params!!.put("clients", clients)
+            val request = jsonRequest("Group.SetClients", params)
+            if (this.isConnected) tcpClient!!.sendMessage(request.toString())
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    public void setStream(String groupId, String streamId) {
+    fun setStream(groupId: String?, streamId: String?) {
         try {
-            JSONObject params = new JSONObject();
-            params.put("id", groupId);
-            params.put("stream_id", streamId);
-            RPCRequest request = jsonRequest("Group.SetStream", params);
-            if (isConnected())
-                tcpClient.sendMessage(request.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            val params = JSONObject()
+            params!!.put("id", groupId)
+            params!!.put("stream_id", streamId)
+            val request = jsonRequest("Group.SetStream", params)
+            if (this.isConnected) tcpClient!!.sendMessage(request.toString())
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    public void setGroupMuted(Group group, boolean muted) {
+    fun setGroupMuted(group: Group, muted: Boolean) {
         try {
-            JSONObject params = new JSONObject();
-            params.put("id", group.getId());
-            params.put("mute", muted);
-            RPCRequest request = jsonRequest("Group.SetMute", params);
-            if (isConnected())
-                tcpClient.sendMessage(request.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            val params = JSONObject()
+            params!!.put("id", group.id)
+            params!!.put("mute", muted)
+            val request = jsonRequest("Group.SetMute", params)
+            if (this.isConnected) tcpClient!!.sendMessage(request.toString())
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    public void setGroupVolume(Group group) {
+    fun setGroupVolume(group: Group) {
         try {
-            JSONArray batch = new JSONArray();
-            for (Client client : group.getClients()) {
-                Volume volume = client.getConfig().getVolume();
-                RPCRequest volumeRequest = getVolumeRequest(client, volume.getPercent(), volume.isMuted());
-                batch.put(volumeRequest.toJson());
+            val batch = JSONArray()
+            for (client in group.clients) {
+                val volume = client.config!!.volume!!
+                val volumeRequest = getVolumeRequest(client, volume.percent, volume.isMuted)
+                batch.put(volumeRequest.toJson())
             }
-            if (isConnected())
-                tcpClient.sendMessage(batch.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            if (this.isConnected) tcpClient!!.sendMessage(batch.toString())
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    private RPCRequest getVolumeRequest(Client client, int percent, boolean mute) throws JSONException {
-        Volume volume = new Volume(percent, mute);
-        JSONObject params = new JSONObject();
-        params.put("id", client.getId());
-        params.put("volume", volume.toJson());
-        return jsonRequest("Client.SetVolume", params);
+    @Throws(JSONException::class)
+    private fun getVolumeRequest(client: Client, percent: Int, mute: Boolean): RPCRequest {
+        val volume = Volume(percent, mute)
+        val params = JSONObject()
+        params!!.put("id", client.id)
+        params!!.put("volume", volume.toJson())
+        return jsonRequest("Client.SetVolume", params)
     }
 
-    public void setVolume(Client client, int percent, boolean mute) {
+    fun setVolume(client: Client, percent: Int, mute: Boolean) {
         try {
-            if (isConnected())
-                tcpClient.sendMessage(getVolumeRequest(client, percent, mute).toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            if (this.isConnected) tcpClient!!.sendMessage(
+                getVolumeRequest(
+                    client,
+                    percent,
+                    mute
+                ).toString()
+            )
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    public void delete(Client client) {
+    fun delete(client: Client) {
         try {
-            JSONObject params = new JSONObject();
-            params.put("id", client.getId());
-            RPCRequest request = jsonRequest("Server.DeleteClient", params);
-            if (isConnected())
-                tcpClient.sendMessage(request.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            val params = JSONObject()
+            params!!.put("id", client.id)
+            val request = jsonRequest("Server.DeleteClient", params)
+            if (this.isConnected) tcpClient!!.sendMessage(request.toString())
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    public enum ClientEvent {
+    enum class ClientEvent(text: String) {
         connected("Client.OnConnect"),
         disconnected("Client.OnDisconnect"),
         updated("Client.OnUpdate");
-        //deleted("Client.OnDelete");
-        private final String text;
 
-        ClientEvent(String text) {
-            this.text = text;
+        //deleted("Client.OnDelete");
+        val text: String?
+
+        init {
+            this.text = text
         }
 
-        public static ClientEvent fromString(String text) {
-            if (text != null) {
-                for (ClientEvent b : ClientEvent.values()) {
-                    if (text.equalsIgnoreCase(b.text)) {
-                        return b;
+        companion object {
+            fun fromString(text: String?): ClientEvent {
+                if (text != null) {
+                    for (b in entries) {
+                        if (text.equals(b.text, ignoreCase = true)) {
+                            return b
+                        }
                     }
                 }
+                throw IllegalArgumentException("No ClientEvent with text " + text + " found")
             }
-            throw new IllegalArgumentException("No ClientEvent with text " + text + " found");
-        }
-
-        public String getText() {
-            return this.text;
         }
     }
 
 
-    public interface ClientListener {
-        void onConnect(Client client);
+    interface ClientListener {
+        fun onConnect(client: Client?)
 
-        void onDisconnect(String clientId);
+        fun onDisconnect(clientId: String?)
 
-        void onUpdate(Client client);
+        fun onUpdate(client: Client?)
 
-        void onVolumeChanged(RPCEvent event, String clientId, Volume volume);
+        fun onVolumeChanged(event: RPCEvent?, clientId: String?, volume: Volume?)
 
-        void onLatencyChanged(RPCEvent event, String clientId, long latency);
+        fun onLatencyChanged(event: RPCEvent?, clientId: String?, latency: Long)
 
-        void onNameChanged(RPCEvent event, String clientId, String name);
+        fun onNameChanged(event: RPCEvent?, clientId: String?, name: String?)
     }
 
-    public interface GroupListener {
-        void onUpdate(Group group);
+    interface GroupListener {
+        fun onUpdate(group: Group?)
 
-        void onMute(RPCEvent event, String groupId, boolean mute);
+        fun onMute(event: RPCEvent?, groupId: String?, mute: Boolean)
 
-        void onStreamChanged(RPCEvent event, String groupId, String streamId);
+        fun onStreamChanged(event: RPCEvent?, groupId: String?, streamId: String?)
     }
 
-    public interface StreamListener {
-        void onUpdate(String streamId, Stream stream);
+    interface StreamListener {
+        fun onUpdate(streamId: String?, stream: Stream?)
     }
 
-    public interface ServerListener {
-        void onUpdate(ServerStatus server);
+    interface ServerListener {
+        fun onUpdate(server: ServerStatus?)
     }
 
 
-    public interface RemoteControlListener extends ServerListener, StreamListener, GroupListener, ClientListener {
-        void onConnected(RemoteControl remoteControl);
+    interface RemoteControlListener : ServerListener, StreamListener, GroupListener,
+        ClientListener {
+        fun onConnected(remoteControl: RemoteControl?)
 
-        void onConnecting(RemoteControl remoteControl);
+        fun onConnecting(remoteControl: RemoteControl?)
 
-        void onDisconnected(RemoteControl remoteControl, Exception e);
+        fun onDisconnected(remoteControl: RemoteControl?, e: Exception?)
 
-        void onBatchStart();
+        fun onBatchStart()
 
-        void onBatchEnd();
-/*
+        fun onBatchEnd() /*
         void onClientEvent(RemoteControl remoteControl, RPCEvent rpcEvent, Client client, ClientEvent event);
 
         void onServerUpdate(RemoteControl remoteControl, RPCEvent rpcEvent, ServerStatus serverStatus);
@@ -425,5 +418,9 @@ public class RemoteControl implements TcpClient.TcpClientListener {
 
         void onGroupUpdate(RemoteControl remoteControl, RPCEvent rpcEvent, Group group);
 */
+    }
+
+    companion object {
+        private const val TAG = "RC"
     }
 }

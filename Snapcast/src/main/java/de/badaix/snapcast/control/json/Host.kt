@@ -15,107 +15,78 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Objects;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class Host implements JsonSerialisable {
-    String name = "";
-    String mac = "";
-    String os = "";
-    String arch = "";
-    String ip = "";
+class Host : JsonSerialisable {
+    var name: String? = ""
+    var mac: String? = ""
+    var os: String? = ""
+    var arch: String? = ""
+    var ip: String? = ""
 
-    public Host(JSONObject json) {
-        fromJson(json);
+    constructor(json: JSONObject) {
+        fromJson(json)
     }
 
-    public Host() {
+    constructor()
 
-    }
-
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            name = json.getString("name");
-            mac = json.getString("mac");
-            os = json.getString("os");
-            arch = json.getString("arch");
-            ip = json.getString("ip");
-        } catch (JSONException e) {
-            e.printStackTrace();
+            name = json.getString("name")
+            mac = json.getString("mac")
+            os = json.getString("os")
+            arch = json.getString("arch")
+            ip = json.getString("ip")
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("name", name);
-            json.put("mac", mac);
-            json.put("os", os);
-            json.put("arch", arch);
-            json.put("ip", ip);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("name", name)
+            json.put("mac", mac)
+            json.put("os", os)
+            json.put("arch", arch)
+            json.put("ip", ip)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public String getName() {
-        return name;
+    override fun toString(): String {
+        return toJson().toString()
     }
 
-    public String getMac() {
-        return mac;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
+
+        val that = o as Host
+
+        if (name != that.name) return false
+        if (mac != that.mac) return false
+        if (os != that.os) return false
+        if (arch != that.arch) return false
+        return ip == that.ip
     }
 
-    public String getOs() {
-        return os;
-    }
-
-    public String getArch() {
-        return arch;
-    }
-
-    public String getIp() {
-        return ip;
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Host that = (Host) o;
-
-        if (!Objects.equals(name, that.name)) return false;
-        if (!Objects.equals(mac, that.mac)) return false;
-        if (!Objects.equals(os, that.os)) return false;
-        if (!Objects.equals(arch, that.arch)) return false;
-        return Objects.equals(ip, that.ip);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (mac != null ? mac.hashCode() : 0);
-        result = 31 * result + (os != null ? os.hashCode() : 0);
-        result = 31 * result + (arch != null ? arch.hashCode() : 0);
-        result = 31 * result + (ip != null ? ip.hashCode() : 0);
-        return result;
+    override fun hashCode(): Int {
+        var result = if (name != null) name.hashCode() else 0
+        result = 31 * result + (if (mac != null) mac.hashCode() else 0)
+        result = 31 * result + (if (os != null) os.hashCode() else 0)
+        result = 31 * result + (if (arch != null) arch.hashCode() else 0)
+        result = 31 * result + (if (ip != null) ip.hashCode() else 0)
+        return result
     }
 }
 

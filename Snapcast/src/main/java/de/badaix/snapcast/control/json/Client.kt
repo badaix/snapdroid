@@ -15,151 +15,118 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.control.json
 
-package de.badaix.snapcast.control.json;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Objects;
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Created by johannes on 06.01.16.
  */
-public class Client implements JsonSerialisable, Comparable<Client> {
-    private Host host;
-    private Snapclient snapclient;
-    private ClientConfig config;
-    private Time_t lastSeen;
-    private boolean connected;
-    private String clientId;
-    private boolean deleted = false;
+class Client(json: JSONObject) : JsonSerialisable, Comparable<Client?> {
+    var host: Host? = null
+        private set
+    private var snapclient: Snapclient? = null
+    var config: ClientConfig? = null
+        private set
+    private var lastSeen: Time_t? = null
+    var isConnected: Boolean = false
+    var id: String? = null
+        private set
+    var isDeleted: Boolean = false
 
-    public Client(JSONObject json) {
-        fromJson(json);
+    init {
+        fromJson(json)
     }
 
-    @Override
-    public void fromJson(JSONObject json) {
+    override fun fromJson(json: JSONObject?) {
+        if (json == null) return
         try {
-            host = new Host(json.getJSONObject("host"));
-            snapclient = new Snapclient(json.getJSONObject("snapclient"));
-            config = new ClientConfig(json.getJSONObject("config"));
+            host = Host(json.getJSONObject("host"))
+            snapclient = Snapclient(json.getJSONObject("snapclient"))
+            config = ClientConfig(json.getJSONObject("config"))
 
-            lastSeen = new Time_t(json.getJSONObject("lastSeen"));
-            connected = json.getBoolean("connected");
-            clientId = json.optString("id", host.mac);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            lastSeen = Time_t(json.getJSONObject("lastSeen"))
+            this.isConnected = json.getBoolean("connected")
+            this.id = json.optString("id", host!!.mac)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
+    override fun toJson(): JSONObject {
+        val json = JSONObject()
         try {
-            json.put("host", host.toJson());
-            json.put("snapclient", snapclient.toJson());
-            json.put("config", config.toJson());
-            json.put("lastSeen", lastSeen.toJson());
-            json.put("connected", connected);
-            json.put("id", clientId);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            json.put("host", host!!.toJson())
+            json.put("snapclient", snapclient!!.toJson())
+            json.put("config", config!!.toJson())
+            json.put("lastSeen", lastSeen!!.toJson())
+            json.put("connected", this.isConnected)
+            json.put("id", this.id)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        return json;
+        return json
     }
 
-    public Host getHost() {
-        return host;
+    fun getSnapclient(): Snapcast? {
+        return snapclient
     }
 
-    public Snapcast getSnapclient() {
-        return snapclient;
+    fun getLastSeen(): Time_t {
+        return lastSeen!!
     }
 
-    public ClientConfig getConfig() {
-        return config;
+    fun setVolume(volume: Volume?) {
+        this.config!!.volume = volume
     }
 
-    public Time_t getLastSeen() {
-        return lastSeen;
+    fun setName(name: String?) {
+        this.config!!.name = name
     }
 
-    public void setVolume(Volume volume) {
-        this.config.setVolume(volume);
-    }
+    val visibleName: String?
+        get() {
+            if ((config!!.name != null) && !config!!.name!!
+                    .isEmpty()
+            ) return config!!.name
+            var name = host!!.name
+            if (config!!.instance > 1) name += " #" + config!!.instance
+            return name
+        }
 
-    public void setName(String name) {
-        this.config.setName(name);
-    }
-
-    public String getVisibleName() {
-        if ((config.getName() != null) && !config.getName().isEmpty())
-            return config.getName();
-        String name = host.getName();
-        if (config.getInstance() > 1)
-            name += " #" + config.getInstance();
-        return name;
-    }
-
-    public boolean isConnected() {
-        return connected;
-    }
-
-    public void setConnected(boolean connected) {
-        this.connected = connected;
-    }
-
-    public String getId() {
-        return clientId;
-    }
-
-    public boolean isDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
-    @Override
-    public String toString() {
-        return toJson().toString();
+    override fun toString(): String {
+        return toJson().toString()
     }
 
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
 
-        Client that = (Client) o;
+        val that = o as Client
 
-        if (!Objects.equals(host, that.host)) return false;
-        if (!Objects.equals(snapclient, that.snapclient))
-            return false;
-        if (!Objects.equals(config, that.config)) return false;
-        if (connected != that.connected) return false;
-        if (!Objects.equals(clientId, that.clientId))
-            return false;
-        return (deleted == that.deleted);
+        if (host != that.host) return false
+        if (snapclient != that.snapclient) return false
+        if (config != that.config) return false
+        if (this.isConnected != that.isConnected) return false
+        if (this.id != that.id) return false
+        return (this.isDeleted == that.isDeleted)
     }
 
-    @Override
-    public int hashCode() {
-        int result = host != null ? host.hashCode() : 0;
-        result = 31 * result + (snapclient != null ? snapclient.hashCode() : 0);
-        result = 31 * result + (config != null ? config.hashCode() : 0);
-        result = 31 * result + (connected ? 1 : 0);
-        result = 31 * result + (clientId != null ? clientId.hashCode() : 0);
-        result = 31 * result + (deleted ? 1 : 0);
-        return result;
+    override fun hashCode(): Int {
+        var result = if (host != null) host.hashCode() else 0
+        result = 31 * result + (if (snapclient != null) snapclient.hashCode() else 0)
+        result = 31 * result + (if (config != null) config!!.hashCode() else 0)
+        result = 31 * result + (if (this.isConnected) 1 else 0)
+        result = 31 * result + (if (this.id != null) id.hashCode() else 0)
+        result = 31 * result + (if (this.isDeleted) 1 else 0)
+        return result
     }
 
-    @Override
-    public int compareTo(Client another) {
-        return getVisibleName().compareToIgnoreCase(another.getVisibleName());
+    override fun compareTo(another: Client?): Int {
+        if (another == null) return 1
+        return this.visibleName!!.compareTo(another.visibleName!!, ignoreCase = true)
     }
 }
 

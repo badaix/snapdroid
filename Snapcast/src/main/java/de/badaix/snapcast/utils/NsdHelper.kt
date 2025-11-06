@@ -15,148 +15,131 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package de.badaix.snapcast.utils
 
-package de.badaix.snapcast.utils;
+import android.annotation.TargetApi
+import android.content.Context
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdManager.DiscoveryListener
+import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiManager.MulticastLock
+import android.os.Build
+import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.net.InetAddress
+import javax.inject.Inject
 
 /**
  * Created by johannes on 19.01.16.
  */
 
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
-import android.net.wifi.WifiManager;
-import android.os.Build;
-import android.util.Log;
-
-import java.net.InetAddress;
-
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-public class NsdHelper {
+class NsdHelper @Inject constructor(@ApplicationContext private var mContext: Context) {
+    private var serviceName: String? = null
+    private var serviceType: String? = null
+    private val mPort = 0
+    private val mHost: InetAddress? = null
+    private var mNsdManager: NsdManager? = null
+    private var mDiscoveryListener: DiscoveryListener? = null
+    private var mResolveListener: NsdManager.ResolveListener? = null
+    private var listener: NsdHelperListener? = null
+    private var multicastLock: MulticastLock? = null
 
-    private static final String TAG = "NsdHelper";
-    private static NsdHelper mInstance;
-    private String serviceName;
-    private String serviceType;
-    //    private static final String NSD_SERVICE_TYPE = "_http._tcp.";
-    private int mPort;
-    private InetAddress mHost;
-    private NsdManager mNsdManager;
-    private android.net.nsd.NsdManager.DiscoveryListener mDiscoveryListener = null;
-    private android.net.nsd.NsdManager.ResolveListener mResolveListener = null;
-    private Context mContext;
-    private NsdHelperListener listener = null;
-    private WifiManager.MulticastLock multicastLock = null;
-
-    private NsdHelper(Context context) {
-        mContext = context;
-    }
-
-    public static NsdHelper getInstance(Context context) {
-        if (mInstance == null) {
-            mInstance = new NsdHelper(context);
-        } else {
-            mInstance.mContext = context;
-        }
-        return mInstance;
-    }
-
-    public void startListening(String serviceType, String serviceName, NsdHelperListener listener) {
-        stopListening();
-        this.listener = listener;
-        this.serviceName = serviceName;
-        this.serviceType = serviceType;
+    fun startListening(serviceType: String?, serviceName: String, listener: NsdHelperListener?) {
+        stopListening()
+        this.listener = listener
+        this.serviceName = serviceName
+        this.serviceType = serviceType
 
         // https://stackoverflow.com/questions/53615125/nsdmanager-discovery-does-not-work-on-android-9
-        WifiManager wifi = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        val wifi = mContext.getSystemService(Context.WIFI_SERVICE) as WifiManager?
         if (wifi != null) {
-            multicastLock = wifi.createMulticastLock("multicastLock");
-            multicastLock.setReferenceCounted(true);
-            multicastLock.acquire();
+            multicastLock = wifi.createMulticastLock("multicastLock")
+            multicastLock!!.setReferenceCounted(true)
+            multicastLock!!.acquire()
         }
 
-        initializeResolveListener();
-        initializeDiscoveryListener();
-        mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
-        mNsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
-//        mNsdManager.discoverServices("_snapcast-jsonrpc._tcp.", NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+        initializeResolveListener()
+        initializeDiscoveryListener()
+        mNsdManager = mContext.getSystemService(Context.NSD_SERVICE) as NsdManager
+        mNsdManager!!.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener)
+        //        mNsdManager.discoverServices("_snapcast-jsonrpc._tcp.", NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
     }
 
-    public void stopListening() {
+    fun stopListening() {
         if (mDiscoveryListener != null) {
-            mNsdManager.stopServiceDiscovery(mDiscoveryListener);
-            mDiscoveryListener = null;
+            mNsdManager!!.stopServiceDiscovery(mDiscoveryListener)
+            mDiscoveryListener = null
         }
         if (multicastLock != null) {
-            multicastLock.release();
-            multicastLock = null;
+            multicastLock!!.release()
+            multicastLock = null
         }
     }
 
-    private void initializeResolveListener() {
-        mResolveListener = new NsdManager.ResolveListener() {
-            @Override
-            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                Log.d(TAG, "Resolve failed");
+    private fun initializeResolveListener() {
+        mResolveListener = object : NsdManager.ResolveListener {
+            override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
+                Log.d(TAG, "Resolve failed")
             }
 
-            @Override
-            public void onServiceResolved(NsdServiceInfo serviceInfo) {
-                NsdServiceInfo info = serviceInfo;
-                Log.i(TAG, "onServiceResolved, canonical host name: " + info.getHost().getCanonicalHostName());
+            override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+                val info = serviceInfo
+                Log.i(
+                    TAG,
+                    "onServiceResolved, canonical host name: " + info.host
+                        .getCanonicalHostName()
+                )
                 // sometimes it returns an IPv6 address...
-                // if (!info.getHost().getCanonicalHostName().contains(":"))
-                listener.onResolved(NsdHelper.this, serviceInfo);
+                // if (!info.host.getCanonicalHostName().contains(":"))
+                listener!!.onResolved(this@NsdHelper, serviceInfo)
             }
-        };
+        }
     }
 
-    private void initializeDiscoveryListener() {
-        mDiscoveryListener = new NsdManager.DiscoveryListener() {
-            @Override
-            public void onStartDiscoveryFailed(String serviceType, int errorCode) {
-                Log.e(TAG, "Discovery failed, error code: " + errorCode);
+    private fun initializeDiscoveryListener() {
+        mDiscoveryListener = object : DiscoveryListener {
+            override fun onStartDiscoveryFailed(serviceType: String?, errorCode: Int) {
+                Log.e(TAG, "Discovery failed, error code: " + errorCode)
             }
 
-            @Override
-            public void onStopDiscoveryFailed(String serviceType, int errorCode) {
-                Log.e(TAG, "Stopping discovery failed, error code: " + errorCode);
+            override fun onStopDiscoveryFailed(serviceType: String?, errorCode: Int) {
+                Log.e(TAG, "Stopping discovery failed, error code: " + errorCode)
             }
 
-            @Override
-            public void onDiscoveryStarted(String serviceType) {
-                Log.i(TAG, "Discovery started, service tyoe: " + serviceType);
+            override fun onDiscoveryStarted(serviceType: String?) {
+                Log.i(TAG, "Discovery started, service tyoe: " + serviceType)
             }
 
-            @Override
-            public void onDiscoveryStopped(String serviceType) {
-                Log.i(TAG, "Discovery stopped, service type: " + serviceType);
+            override fun onDiscoveryStopped(serviceType: String?) {
+                Log.i(TAG, "Discovery stopped, service type: " + serviceType)
             }
 
-            @Override
-            public void onServiceFound(NsdServiceInfo serviceInfo) {
-                NsdServiceInfo info = serviceInfo;
-                Log.d(TAG, "Service found: " + info.getServiceName());
-                if (info.getServiceName().startsWith(serviceName)) {
+            override fun onServiceFound(serviceInfo: NsdServiceInfo) {
+                val info = serviceInfo
+                Log.d(TAG, "Service found: " + info.getServiceName())
+                if (info.getServiceName().startsWith(serviceName!!)) {
                     try {
-                        mNsdManager.resolveService(info, mResolveListener);
-                    } catch (IllegalArgumentException e) {
-                        e.printStackTrace();
+                        mNsdManager!!.resolveService(info, mResolveListener)
+                    } catch (e: IllegalArgumentException) {
+                        e.printStackTrace()
                     }
                 }
             }
 
-            @Override
-            public void onServiceLost(NsdServiceInfo serviceInfo) {
-                NsdServiceInfo info = serviceInfo;
-                Log.d(TAG, "Service lost: " + info.getServiceName());
+            override fun onServiceLost(serviceInfo: NsdServiceInfo) {
+                val info = serviceInfo
+                Log.d(TAG, "Service lost: " + info.getServiceName())
             }
-        };
+        }
     }
 
-    public interface NsdHelperListener {
-        void onResolved(NsdHelper nsdHelper, NsdServiceInfo serviceInfo);
+    interface NsdHelperListener {
+        fun onResolved(nsdHelper: NsdHelper?, serviceInfo: NsdServiceInfo?)
+    }
+
+    companion object {
+        private const val TAG = "NsdHelper"
     }
 }
-
