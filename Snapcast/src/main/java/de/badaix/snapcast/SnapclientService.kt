@@ -16,392 +16,378 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.badaix.snapcast;
+package de.badaix.snapcast
 
-import static android.os.PowerManager.FULL_WAKE_LOCK;
-import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.app.UiModeManager
+import android.content.Intent
+import android.content.res.Configuration
+import android.media.AudioManager
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiManager.WifiLock
+import android.os.Binder
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.PowerManager
+import android.os.PowerManager.WakeLock
+import android.os.Process
+import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
+import androidx.core.content.ContextCompat
+import de.badaix.snapcast.utils.Settings
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.UUID
+import kotlin.math.max
+import androidx.core.content.edit
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.app.UiModeManager;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.media.AudioManager;
-import android.net.wifi.WifiManager;
-import android.os.Binder;
-import android.os.Build;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.PowerManager;
-import android.util.Log;
+class SnapclientService : Service() {
+    private val mBinder: IBinder = LocalBinder()
+    private var process: java.lang.Process? = null
+    private var wakeLock: WakeLock? = null
+    private var wifiWakeLock: WifiLock? = null
+    private val reader: Thread? = null
+    var isRunning: Boolean = false
+        private set
+    private var listener: SnapclientListener? = null
+    private var logReceived = false
+    private val restartHandler = Handler()
+    private var restartRunnable: Runnable? = null
+    private var host: String? = null
+    private var port = 0
 
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.TaskStackBuilder;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.UUID;
-
-import de.badaix.snapcast.utils.Settings;
-
-/**
- * Created by johannes on 01.01.16.
- */
-
-public class SnapclientService extends Service {
-
-    private static final String TAG = "Service";
-
-    public static final String EXTRA_HOST = "EXTRA_HOST";
-    public static final String EXTRA_PORT = "EXTRA_PORT";
-    public static final String ACTION_START = "ACTION_START";
-    public static final String ACTION_STOP = "ACTION_STOP";
-    public static final String NOTIFICATION_CHANNEL_ID = "de.badaix.snapcast.snapclientservice.defaultchannel";
-
-    private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
-    private static String uniqueID = null;
-
-    private final IBinder mBinder = new LocalBinder();
-    private java.lang.Process process = null;
-    private PowerManager.WakeLock wakeLock = null;
-    private WifiManager.WifiLock wifiWakeLock = null;
-    private final Thread reader = null;
-    private boolean running = false;
-    private SnapclientListener listener = null;
-    private boolean logReceived;
-    private final Handler restartHandler = new Handler();
-    private Runnable restartRunnable = null;
-    private String host = null;
-    private int port = 0;
-
-    public boolean isRunning() {
-        return running;
+    fun setListener(listener: SnapclientListener?) {
+        this.listener = listener
     }
 
-    public void setListener(SnapclientListener listener) {
-        this.listener = listener;
-    }
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return when (intent?.action) {
+            ACTION_START -> {
+                val host = intent.getStringExtra(EXTRA_HOST)
+                val port = intent.getIntExtra(EXTRA_PORT, DEFAULT_PORT)
 
-    public void initChannels(Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return;
-        }
-        NotificationManager notificationManager =
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,
-                "Snapclient service",
-                NotificationManager.IMPORTANCE_LOW);
-        channel.setDescription("Snapcast player service");
-        notificationManager.createNotificationChannel(channel);
-    }
+                val stopIntent = Intent(this, SnapclientService::class.java)
+                    .setAction(ACTION_STOP)
+                val stopPendingIntent = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        initChannels(this);
-    }
+                val builder: NotificationCompat.Builder =
+                    NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_media_play)
+                        .setTicker(getText(R.string.ticker_text))
+                        .setContentTitle(getText(R.string.notification_title))
+                        .setContentText(getText(R.string.notification_text))
+                        .setContentInfo(host)
+                        .setStyle(
+                            NotificationCompat.BigTextStyle()
+                                .bigText(getText(R.string.notification_text))
+                        )
+                        .addAction(R.drawable.ic_media_stop, getString(R.string.stop), stopPendingIntent)
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null)
-            return START_NOT_STICKY;
+                val resultIntent = Intent(this, MainActivity::class.java)
 
-        if (ACTION_STOP.equals(intent.getAction())) {
-            stopService();
-            return START_NOT_STICKY;
-        } else if (ACTION_START.equals(intent.getAction())) {
-            String host = intent.getStringExtra(EXTRA_HOST);
-            int port = intent.getIntExtra(EXTRA_PORT, 1704);
-
-            Intent stopIntent = new Intent(this, SnapclientService.class);
-            stopIntent.setAction(ACTION_STOP);
-            PendingIntent piStop = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE);
-
-            NotificationCompat.Builder builder =
-                    new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                            .setSmallIcon(R.drawable.ic_media_play)
-                            .setTicker(getText(R.string.ticker_text))
-                            .setContentTitle(getText(R.string.notification_title))
-                            .setContentText(getText(R.string.notification_text))
-                            .setContentInfo(host)
-                            .setStyle(new NotificationCompat.BigTextStyle().bigText(getText(R.string.notification_text)))
-                            .addAction(R.drawable.ic_media_stop, getString(R.string.stop), piStop);
-
-            Intent resultIntent = new Intent(this, MainActivity.class);
-
-            // The stack builder object will contain an artificial back stack for the
-            // started Activity.
-            // This ensures that navigating backward from the Activity leads out of
-            // your application to the Home screen.
-            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-            // Adds the back stack for the Intent (but not the Intent itself)
-            stackBuilder.addParentStack(MainActivity.class);
-            // Adds the Intent that starts the Activity to the top of the stack
-            stackBuilder.addNextIntent(resultIntent);
-            PendingIntent resultPendingIntent =
+                // The stack builder object will contain an artificial back stack for the
+                // started Activity.
+                // This ensures that navigating backward from the Activity leads out of
+                // your application to the Home screen.
+                val stackBuilder = TaskStackBuilder.create(this)
+                // Adds the back stack for the Intent (but not the Intent itself)
+                stackBuilder.addParentStack(MainActivity::class.java)
+                // Adds the Intent that starts the Activity to the top of the stack
+                stackBuilder.addNextIntent(resultIntent)
+                val resultPendingIntent =
                     stackBuilder.getPendingIntent(
-                            0,
-                            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-                    );
-            builder.setContentIntent(resultPendingIntent);
-            // mId allows you to update the notification later on.
-            final Notification notification = builder.build();
-            startForeground(123, notification);
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                builder.setContentIntent(resultPendingIntent)
+                // mId allows you to update the notification later on.
+                val notification = builder.build()
+                startForeground(FOREGROUND_NOTIFICATION_ID, notification)
 
-            start(host, port);
-            return START_STICKY;
-        }
-        return START_NOT_STICKY;
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.d(TAG, "onDestroy");
-        stop();
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
-    }
-
-    public void stopPlayer() {
-        Log.d(TAG, "stopPlayer");
-        stopService();
-    }
-
-    private void stopService() {
-        Log.d(TAG, "stopService");
-        stop();
-        stopForeground(true);
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        mNotificationManager.cancel(123);
-    }
-
-    public synchronized static String getUniqueId(Context context) {
-        if (uniqueID == null) {
-            SharedPreferences sharedPrefs = context.getSharedPreferences(
-                    PREF_UNIQUE_ID, Context.MODE_PRIVATE);
-            uniqueID = sharedPrefs.getString(PREF_UNIQUE_ID, null);
-            if (uniqueID == null) {
-                uniqueID = UUID.randomUUID().toString();
-                SharedPreferences.Editor editor = sharedPrefs.edit();
-                editor.putString(PREF_UNIQUE_ID, uniqueID);
-                editor.commit();
+                start(host, port)
+                START_STICKY
             }
+            ACTION_STOP -> {
+                stopService()
+                START_NOT_STICKY
+            }
+            else -> START_NOT_STICKY
         }
-        return uniqueID;
     }
 
-    private void startProcess() throws IOException {
-        Log.d(TAG, "startProcess");
-        String player = "oboe";
-        String configuredEngine = Settings.getInstance(getApplicationContext()).getAudioEngine();
-        if (configuredEngine.equals("OpenSL"))
-            player = "opensl";
-        else if (configuredEngine.equals("Oboe"))
-            player = "oboe";
-        else {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-                player = "opensl";
-            else
-                player = "oboe";
+    override fun onDestroy() {
+        Log.d(TAG, "onDestroy")
+        stop()
+    }
+
+    override fun onBind(intent: Intent?): IBinder {
+        return mBinder
+    }
+
+    fun stopPlayer() {
+        Log.d(TAG, "stopPlayer")
+        stopService()
+    }
+
+    private fun stopService() {
+        Log.d(TAG, "stopService")
+        stop()
+        stopForeground(true)
+        val mNotificationManager =
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        mNotificationManager.cancel(FOREGROUND_NOTIFICATION_ID)
+    }
+
+    private fun startProcess() {
+        Log.d(TAG, "startProcess")
+        val configuredEngine = Settings.getInstance(this).audioEngine
+        val player = when {
+            configuredEngine == "OpenSL" -> "opensl"
+            configuredEngine == "Oboe" -> "oboe"
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.O -> "opensl"
+            else -> "oboe"
         }
 
-        String rate = null;
-        String fpb = null;
-        String sampleformat = "*:16:*";
-        AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        var rate: String? = null
+        var fpb: String? = null
+        var sampleformat = "*:16:*"
+        val audioManager = ContextCompat.getSystemService(this, AudioManager::class.java)
+            ?: throw RuntimeException("AudioManager not available")
         // boolean bta2dp = audioManager.isBluetoothA2dpOn();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            if (Settings.getInstance(getApplicationContext()).doResample()) {
-                // Query the AudioManager for the native sample rate and let Snapclient to the
-                // resampling using soxr's "high quality" configuration.
-                // This will result in better latency estimation and thus better audio sync.
-                rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-                fpb = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-                sampleformat = rate + ":*:*";
-            }
-            // bta2dp = false;
-            // for (AudioDeviceInfo deviceInfo : audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
-            //     if (deviceInfo.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP) {
-            //         bta2dp = true;
-            //         break;
-            //     }
-            // }
+        if (Settings.getInstance(this).doResample()) {
+            // Query the AudioManager for the native sample rate and let Snapclient to the
+            // resampling using soxr's "high quality" configuration.
+            // This will result in better latency estimation and thus better audio sync.
+            rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
+            fpb = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
+            sampleformat = "$rate:*:*"
         }
-        Log.i(TAG, "Configured engine: " + configuredEngine + ", active engine: " + player + ", sampleformat: " + sampleformat);
-        // Log.i(TAG, "Configured engine: " + configuredEngine + ", active engine: " + player + ", sampleformat: " + sampleformat + ", isBluetoothA2dpOn: " + bta2dp);
+        // bta2dp = false;
+        // for (AudioDeviceInfo deviceInfo : audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+        //     if (deviceInfo.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP) {
+        //         bta2dp = true;
+        //         break;
+        //     }
+        // }
+        Log.i(
+            TAG,
+            "Configured engine: $configuredEngine, active engine: $player, sampleformat: $sampleformat"
+        )
 
-        ProcessBuilder pb = new ProcessBuilder()
-                .command(this.getApplicationInfo().nativeLibraryDir + "/libsnapclient.so", "-h", host, "-p", Integer.toString(port), "--hostID", getUniqueId(this.getApplicationContext()), "--player", player, "--sampleformat", sampleformat, "--logfilter", "*:info,Stats:debug")
-                .redirectErrorStream(true);
-        Map<String, String> env = pb.environment();
-        if (rate != null)
-            env.put("SAMPLE_RATE", rate);
-        if (fpb != null)
-            env.put("FRAMES_PER_BUFFER", fpb);
-        process = pb.start();
+        val command = buildString {
+            append("${applicationInfo.nativeLibraryDir}/libsnapclient.so ")
+            append("-h $host ")
+            append("-p $port ")
+            append("--hostID ${getUniqueId()} ")
+            append("--player $player ")
+            append("--sampleformat $sampleformat ")
+            append("--logfilter *:info,Stats:debug")
+        }
 
-        Thread reader = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                BufferedReader bufferedReader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream()));
-                String line;
+        val pb = ProcessBuilder()
+            .command(command)
+            .redirectErrorStream(true)
+        val env = pb.environment()
+        if (rate != null) env.put("SAMPLE_RATE", rate)
+        if (fpb != null) env.put("FRAMES_PER_BUFFER", fpb)
+        process = pb.start()
+
+        val readerThread = Thread {
+            BufferedReader(InputStreamReader(process!!.inputStream)).use { reader ->
+                var line: String?
                 try {
-                    while ((line = bufferedReader.readLine()) != null) {
-                        log(line);
+                    while ((reader.readLine().also { line = it }) != null) {
+                        log(line!!)
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (e: IOException) {
+                    e.printStackTrace()
                 }
             }
-        });
-        logReceived = false;
-        reader.start();
+        }
+        logReceived = false
+        readerThread.start()
     }
 
-
-    private void start(String host, int port) {
-        Log.d(TAG, "start host: " + host + ", port: " + port);
+    private fun start(host: String?, port: Int) {
+        Log.d(TAG, "start host: $host, port: $port")
         try {
             //https://code.google.com/p/android/issues/detail?id=22763
-            if (running)
-                return;
-            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+            if (this.isRunning) return
+            Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
 
-            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            val powerManager = ContextCompat.getSystemService(this, PowerManager::class.java)
+                ?: throw RuntimeException("PowerManager not available")
+            val uiModeManager = ContextCompat.getSystemService(this, UiModeManager::class.java)
+                ?: throw RuntimeException("UiModeManager not available")
+            val wifiManager = ContextCompat.getSystemService(this, WifiManager::class.java)
+                ?: throw RuntimeException("WifiManager not available")
 
-            UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
-            if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-                Log.d(TAG, "Running on a TV Device");
-                wakeLock = powerManager.newWakeLock(FULL_WAKE_LOCK, "snapcast:SnapcastFullWakeLock");
+            val wakeLockLevel = if (uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION) {
+                Log.d(TAG, "Running on a TV Device")
+                PowerManager.FULL_WAKE_LOCK
             } else {
-                Log.d(TAG, "Running on a non-TV Device");
-                wakeLock = powerManager.newWakeLock(PARTIAL_WAKE_LOCK, "snapcast:SnapcastPartialWakeLock");
+                Log.d(TAG, "Running on a non-TV Device")
+                PowerManager.PARTIAL_WAKE_LOCK
             }
+            wakeLock = powerManager.newWakeLock(
+                wakeLockLevel, "snapcast:SnapcastWakeLock"
+            )
+            wakeLock!!.acquire()
 
-            wakeLock.acquire();
+            val wifiLockType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                WifiManager.WIFI_MODE_FULL_LOW_LATENCY
+            } else {
+                WifiManager.WIFI_MODE_FULL_HIGH_PERF
+            }
+            wifiWakeLock = wifiManager.createWifiLock(
+                wifiLockType,
+                "snapcast:SnapcastWifiWakeLock"
+            )
+            wifiWakeLock!!.acquire()
 
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-            wifiWakeLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "snapcast:SnapcastWifiWakeLock");
-            wifiWakeLock.acquire();
-            this.host = host;
-            this.port = port;
-            startProcess();
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (listener != null)
-                listener.onError(this, e.getMessage(), e);
-            stop();
+            this.host = host
+            this.port = port
+            
+            startProcess()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            listener?.onError(this, e.message, e)
+            stop()
         }
     }
 
-    private void log(String msg) {
+    fun getUniqueId(): String {
+        if (uniqueId == null) {
+            val sharedPrefs = getSharedPreferences(
+                PREF_UNIQUE_ID, MODE_PRIVATE
+            )
+            uniqueId = sharedPrefs.getString(PREF_UNIQUE_ID, null)
+            if (uniqueId == null) {
+                uniqueId = UUID.randomUUID().toString()
+                sharedPrefs.edit {
+                    putString(PREF_UNIQUE_ID, uniqueId)
+                }
+            }
+        }
+        return uniqueId!!
+    }
+
+    private fun log(msg: String) {
         if (!logReceived) {
-            logReceived = true;
-            running = true;
-            if (listener != null)
-                listener.onPlayerStart(this);
+            logReceived = true
+            this.isRunning = true
+            if (listener != null) listener!!.onPlayerStart(this)
         }
         if (listener != null) {
-            int idxSeverityOpen = msg.indexOf('[');
-            int idxSeverityClose = msg.indexOf(']', idxSeverityOpen);
-            int idxTagOpen = msg.indexOf('(', idxSeverityClose);
-            int idxTagClose = msg.indexOf(')', idxTagOpen);
+            val idxSeverityOpen = msg.indexOf('[')
+            val idxSeverityClose = msg.indexOf(']', idxSeverityOpen)
+            val idxTagOpen = msg.indexOf('(', idxSeverityClose)
+            val idxTagClose = msg.indexOf(')', idxTagOpen)
             if ((idxSeverityOpen > 0) && (idxSeverityClose > 0)) {
-                String severity = msg.substring(idxSeverityOpen + 1, idxSeverityClose);
-                String tag = "";
-                if ((idxTagOpen > 0) && (idxTagClose > 0))
-                    tag = msg.substring(idxTagOpen + 1, idxTagClose);
-                String timestamp = msg.substring(0, idxSeverityOpen - 1);
-                String message = msg.substring(Math.max(idxSeverityClose, idxTagClose) + 2);
-                listener.onLog(SnapclientService.this, timestamp, severity, tag, message);
+                val severity = msg.substring(idxSeverityOpen + 1, idxSeverityClose)
+                var tag = ""
+                if ((idxTagOpen > 0) && (idxTagClose > 0)) tag =
+                    msg.substring(idxTagOpen + 1, idxTagClose)
+                val timestamp = msg.substring(0, idxSeverityOpen - 1)
+                val message = msg.substring(max(idxSeverityClose, idxTagClose) + 2)
+                listener!!.onLog(this@SnapclientService, timestamp, severity, tag, message)
 
-                if ((message.equals("Init start")) && (restartRunnable == null)) {
-                    restartRunnable = new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.i(TAG, "Restarting Snapclient");
-                            stopProcess();
+                if ((message == "Init start") && (restartRunnable == null)) {
+                    restartRunnable = object : Runnable {
+                        override fun run() {
+                            Log.i(TAG, "Restarting Snapclient")
+                            stopProcess()
                             try {
-                                startProcess();
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                                startProcess()
+                            } catch (e: IOException) {
+                                e.printStackTrace()
                             }
                         }
-                    };
-                    restartHandler.postDelayed(restartRunnable, 3000);
+                    }
+                    restartHandler.postDelayed(restartRunnable!!, 3000)
                 } else if ((message.contains("Init failed")) && (restartHandler != null)) {
-                    restartHandler.removeCallbacks(restartRunnable);
-                    restartHandler.post(restartRunnable);
-                } else if ((message.equals("Init done")) && (restartHandler != null)) {
-                    restartHandler.removeCallbacks(restartRunnable);
-                    restartRunnable = null;
+                    restartHandler.removeCallbacks(restartRunnable!!)
+                    restartHandler.post(restartRunnable!!)
+                } else if ((message == "Init done") && (restartHandler != null)) {
+                    restartHandler.removeCallbacks(restartRunnable!!)
+                    restartRunnable = null
                 }
             }
         }
     }
 
-    private void stopProcess() {
-        Log.d(TAG, "stopProcess");
+    private fun stopProcess() {
+        Log.d(TAG, "stopProcess")
         try {
-            if (reader != null)
-                reader.interrupt();
-            if (process != null)
-                process.destroy();
-        } catch (Exception e) {
-            e.printStackTrace();
+            reader?.interrupt()
+            process?.destroy()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    private void stop() {
-        Log.d(TAG, "stop");
+    private fun stop() {
+        Log.d(TAG, "stop")
         try {
-            stopProcess();
-            if ((wakeLock != null) && wakeLock.isHeld())
-                wakeLock.release();
-            if ((wifiWakeLock != null) && wifiWakeLock.isHeld())
-                wifiWakeLock.release();
-            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DEFAULT);
-            running = false;
-        } catch (Exception e) {
-            e.printStackTrace();
+            stopProcess()
+            wakeLock?.let { if (it.isHeld) it.release() }
+            wifiWakeLock?.let { if (it.isHeld) it.release() }
+            Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT)
+            this.isRunning = false
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-        if (listener != null)
-            listener.onPlayerStop(this);
+        listener?.onPlayerStop(this)
     }
 
-    public interface SnapclientListener {
-        void onPlayerStart(SnapclientService snapclientService);
+    interface SnapclientListener {
+        fun onPlayerStart(snapclientService: SnapclientService?)
 
-        void onPlayerStop(SnapclientService snapclientService);
+        fun onPlayerStop(snapclientService: SnapclientService?)
 
-        void onLog(SnapclientService snapclientService, String timestamp, String logClass, String tag, String msg);
+        fun onLog(
+            snapclientService: SnapclientService?,
+            timestamp: String?,
+            logClass: String?,
+            tag: String?,
+            msg: String?
+        )
 
-        void onError(SnapclientService snapclientService, String msg, Exception exception);
+        fun onError(snapclientService: SnapclientService?, msg: String?, exception: Exception?)
     }
 
     /**
      * Class used for the client Binder.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with IPC.
      */
-    public class LocalBinder extends Binder {
-        SnapclientService getService() {
-            // Return this instance of LocalService so clients can call public methods
-            return SnapclientService.this;
-        }
+    inner class LocalBinder : Binder() {
+        val service: SnapclientService
+            get() =// Return this instance of LocalService so clients can call public methods
+                this@SnapclientService
     }
 
+    companion object {
+        private const val TAG = "Service"
+
+        const val EXTRA_HOST: String = "EXTRA_HOST"
+        const val EXTRA_PORT: String = "EXTRA_PORT"
+        const val ACTION_START: String = "ACTION_START"
+        const val ACTION_STOP: String = "ACTION_STOP"
+        const val NOTIFICATION_CHANNEL_ID: String =
+            "de.badaix.snapcast.snapclientservice.defaultchannel"
+
+        private const val PREF_UNIQUE_ID = "PREF_UNIQUE_ID"
+        private var uniqueId: String? = null
+
+        private const val DEFAULT_PORT = 1704
+
+        private const val FOREGROUND_NOTIFICATION_ID = 1
+    }
 }
 
 

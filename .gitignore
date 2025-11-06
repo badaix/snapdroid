@@ -7,6 +7,13 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
+/.idea/copilot.*
+/.idea/appInsightsSettings.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/runConfigurations.xml
+/.idea/migrations.xml
+/.idea/AndroidProjectSystem.xml
+/.idea/.name
 .DS_Store
 /build
 /captures
