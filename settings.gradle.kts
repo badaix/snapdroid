@@ -20,7 +20,7 @@ dependencyResolutionManagement {
         mavenCentral()
 
         flatDir {
-            dirs("Snapcast/libs")
+            dirs("app/libs")
         }
 
         maven {
@@ -35,5 +35,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Snapcast"
-include(":Snapcast")
+include(":app")
  
