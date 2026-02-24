@@ -30,6 +30,7 @@ public class Stream implements JsonSerialisable {
     private StreamUri uri;
     private String id;
     private Status status;
+    private StreamProperties properties;
 
     public Stream(JSONObject json) {
         fromJson(json);
@@ -47,6 +48,9 @@ public class Stream implements JsonSerialisable {
                 id = json.getString("id");
                 status = Status.unknown;
             }
+            if (json.has("properties")) {
+                properties = new StreamProperties(json.getJSONObject("properties"));
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -59,6 +63,8 @@ public class Stream implements JsonSerialisable {
             json.put("uri", uri.toJson());
             json.put("id", id);
             json.put("status", status);
+            if (properties != null)
+                json.put("properties", properties.toJson());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -74,7 +80,8 @@ public class Stream implements JsonSerialisable {
 
         if (!Objects.equals(uri, stream.uri)) return false;
         if (!Objects.equals(id, stream.id)) return false;
-        return Objects.equals(status, stream.status);
+        if (!Objects.equals(status, stream.status)) return false;
+        return Objects.equals(properties, stream.properties);
     }
 
     @Override
@@ -82,6 +89,7 @@ public class Stream implements JsonSerialisable {
         int result = uri != null ? uri.hashCode() : 0;
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (properties != null ? properties.hashCode() : 0);
         return result;
     }
 
@@ -111,6 +119,14 @@ public class Stream implements JsonSerialisable {
 
     public String getName() {
         return uri.getName();
+    }
+
+    public StreamProperties getProperties() {
+        return properties;
+    }
+
+    public void setProperties(StreamProperties properties) {
+        this.properties = properties;
     }
 
     @Override

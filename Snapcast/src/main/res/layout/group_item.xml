@@ -20,9 +20,7 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-    <!--    android:descendantFocusability="afterDescendants"-->
-    <!--    android:paddingRight="?android:attr/scrollbarSize"-->
-    <!--    android:background="@drawable/big_card"-->
+
     <androidx.cardview.widget.CardView android:id="@+id/card_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,6 +33,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Stream name + settings button -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
@@ -48,53 +47,122 @@
                     android:background="@null"
                     android:src="@drawable/settings_24px" />
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/tvStreamName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
-                    android:orientation="vertical"
+                    android:layout_centerVertical="true"
                     android:layout_toLeftOf="@+id/ibSettings"
-                    android:layout_toStartOf="@+id/ibSettings">
+                    android:layout_toStartOf="@+id/ibSettings"
+                    android:singleLine="true"
+                    android:fadingEdge="horizontal"
+                    android:paddingBottom="1dp"
+                    android:paddingLeft="5dp"
+                    android:paddingTop="2dp"
+                    android:text="Stream name"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </RelativeLayout>
 
+            <!-- Now playing: metadata + transport (group-level, full width) -->
+            <LinearLayout
+                android:id="@+id/llNowPlaying"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingLeft="5dp"
+                android:paddingRight="2dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/ivAlbumArt"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="4dp">
 
                     <TextView
-                        android:id="@+id/tvStreamName"
+                        android:id="@+id/tvTrackTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:singleLine="true"
-                        android:fadingEdge="horizontal"
-                        android:paddingBottom="1dp"
-                        android:paddingLeft="5dp"
-                        android:paddingTop="2dp"
-                        android:text="Stream name"
-                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                        android:ellipsize="end"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textStyle="bold" />
 
-
-                    <LinearLayout
-                        android:id="@+id/llVolume"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal"
-                        android:paddingBottom="4dp"
-                        android:paddingLeft="3dp">
-
-                        <ImageButton
-                            android:id="@+id/ibMute"
-                            android:layout_width="60dp"
-                            android:layout_height="match_parent"
-                            android:background="@null"
-                            android:src="@drawable/volume_up_24px" />
-
-                        <SeekBar
-                            android:id="@+id/volumeSeekBar"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:max="100" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/tvTrackArtist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
                 </LinearLayout>
-            </RelativeLayout>
 
+                <ImageButton
+                    android:id="@+id/ibPrevious"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_skip_previous_24px"
+                    android:contentDescription="Previous" />
+
+                <ImageButton
+                    android:id="@+id/ibPlayPause"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_play_arrow_24px"
+                    android:contentDescription="Play/Pause" />
+
+                <ImageButton
+                    android:id="@+id/ibNext"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_skip_next_24px"
+                    android:contentDescription="Next" />
+            </LinearLayout>
+
+            <!-- Group volume (mute + seekbar) -->
+            <LinearLayout
+                android:id="@+id/llVolume"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="4dp"
+                android:paddingLeft="3dp">
+
+                <ImageButton
+                    android:id="@+id/ibMute"
+                    android:layout_width="60dp"
+                    android:layout_height="match_parent"
+                    android:background="@null"
+                    android:src="@drawable/volume_up_24px" />
+
+                <SeekBar
+                    android:id="@+id/volumeSeekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:max="100" />
+            </LinearLayout>
+
+            <!-- Divider -->
             <View
                 android:layout_width="fill_parent"
                 android:layout_height="1dip"
@@ -105,6 +173,7 @@
                 android:alpha="0.1"
                 android:background="#000000" />
 
+            <!-- Per-client list -->
             <LinearLayout
                 android:id="@+id/llClient"
                 android:layout_width="match_parent"
@@ -113,4 +182,3 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </FrameLayout>
-
