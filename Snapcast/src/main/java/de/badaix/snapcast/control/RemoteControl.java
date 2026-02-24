@@ -31,6 +31,7 @@ import de.badaix.snapcast.control.json.Client;
 import de.badaix.snapcast.control.json.Group;
 import de.badaix.snapcast.control.json.ServerStatus;
 import de.badaix.snapcast.control.json.Stream;
+import de.badaix.snapcast.control.json.StreamProperties;
 import de.badaix.snapcast.control.json.Volume;
 
 /**
@@ -159,6 +160,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
                     listener.onUpdate(new ServerStatus(response.result.getJSONObject("server")));
                 } else if (request.method.equals("Server.DeleteClient")) {
                     listener.onUpdate(new ServerStatus(response.result.getJSONObject("server")));
+                } else if (request.method.equals("Stream.Control")) {
+                    // response is just "ok", nothing to propagate
                 }
             } else {
                 /// Notification
@@ -183,6 +186,12 @@ public class RemoteControl implements TcpClient.TcpClientListener {
                     listener.onStreamChanged(rpcEvent, notification.params.getString("id"), notification.params.getString("stream_id"));
                 } else if (notification.method.equals("Stream.OnUpdate")) {
                     listener.onUpdate(notification.params.getString("id"), new Stream(notification.params.getJSONObject("stream")));
+                } else if (notification.method.equals("Stream.OnProperties")) {
+                    String streamId = notification.params.getString("id");
+                    JSONObject propsJson = notification.params.has("properties")
+                            ? notification.params.getJSONObject("properties")
+                            : notification.params;
+                    listener.onStreamPropertiesChanged(streamId, new StreamProperties(propsJson));
                 } else if (notification.method.equals("Group.OnUpdate")) {
                     listener.onUpdate(new Group(notification.params.getJSONObject("group")));
                 } else if (notification.method.equals("Server.OnUpdate")) {
@@ -347,6 +356,20 @@ public class RemoteControl implements TcpClient.TcpClientListener {
         }
     }
 
+    public void controlStream(String streamId, String command) {
+        try {
+            JSONObject params = new JSONObject();
+            params.put("id", streamId);
+            params.put("command", command);
+            params.put("params", new JSONObject());
+            RPCRequest request = jsonRequest("Stream.Control", params);
+            if (isConnected())
+                tcpClient.sendMessage(request.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     public enum ClientEvent {
         connected("Client.OnConnect"),
         disconnected("Client.OnDisconnect"),
@@ -399,6 +422,8 @@ public class RemoteControl implements TcpClient.TcpClientListener {
 
     public interface StreamListener {
         void onUpdate(String streamId, Stream stream);
+
+        void onStreamPropertiesChanged(String streamId, StreamProperties properties);
     }
 
     public interface ServerListener {

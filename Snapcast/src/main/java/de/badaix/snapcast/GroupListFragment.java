@@ -142,6 +142,18 @@ public class GroupListFragment extends Fragment {
             }
             groupItem.setHideOffline(hideOffline);
             groupItem.setListener(listener);
+
+            boolean isFirstForStream = true;
+            String streamId = group.getStreamId();
+            for (int i = 0; i < position; i++) {
+                Group prev = getItem(i);
+                if (prev != null && streamId.equals(prev.getStreamId())) {
+                    isFirstForStream = false;
+                    break;
+                }
+            }
+            groupItem.setShowNowPlaying(isFirstForStream);
+
             return groupItem;
         }
 

@@ -21,11 +21,14 @@ package de.badaix.snapcast;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -37,6 +40,7 @@ import de.badaix.snapcast.control.json.Client;
 import de.badaix.snapcast.control.json.Group;
 import de.badaix.snapcast.control.json.ServerStatus;
 import de.badaix.snapcast.control.json.Stream;
+import de.badaix.snapcast.control.json.StreamProperties;
 import de.badaix.snapcast.control.json.Volume;
 
 /**
@@ -48,7 +52,6 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
 
     private static final String TAG = "GroupItem";
 
-    //    private TextView title;
     private final SeekBar volumeSeekBar;
     private final ImageButton ibMute;
     private final ImageButton ibSettings;
@@ -58,7 +61,15 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
     private TextView tvStreamName = null;
     private GroupItemListener listener = null;
     private final LinearLayout llVolume;
+    private final LinearLayout llNowPlaying;
+    private final ImageView ivAlbumArt;
+    private final TextView tvTrackTitle;
+    private final TextView tvTrackArtist;
+    private final ImageButton ibPrevious;
+    private final ImageButton ibPlayPause;
+    private final ImageButton ibNext;
     private boolean hideOffline = false;
+    private boolean showNowPlaying = true;
     private Vector<ClientItem> clientItems = null;
     private Vector<Integer> clientVolumes = null;
     private int groupVolume = 0;
@@ -68,7 +79,6 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         LayoutInflater vi = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         vi.inflate(R.layout.group_item, this);
-//        title = (TextView) findViewById(R.id.title);
         volumeSeekBar = findViewById(R.id.volumeSeekBar);
         ibMute = findViewById(R.id.ibMute);
         ibMute.setImageResource(R.drawable.volume_up_24px);
@@ -86,6 +96,18 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
                 streamChoiceDialog();
             }
         });
+
+        llNowPlaying = findViewById(R.id.llNowPlaying);
+        ivAlbumArt = findViewById(R.id.ivAlbumArt);
+        tvTrackTitle = findViewById(R.id.tvTrackTitle);
+        tvTrackArtist = findViewById(R.id.tvTrackArtist);
+        ibPrevious = findViewById(R.id.ibPrevious);
+        ibPlayPause = findViewById(R.id.ibPlayPause);
+        ibNext = findViewById(R.id.ibNext);
+        ibPrevious.setOnClickListener(this);
+        ibPlayPause.setOnClickListener(this);
+        ibNext.setOnClickListener(this);
+
         volumeSeekBar.setOnSeekBarChangeListener(this);
         volumeSeekBar.setOnTouchListener(this);
         volumeSeekBar.setOnFocusChangeListener(this);
@@ -124,18 +146,60 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         if ((tvStreamName == null) || (stream == null))
             return;
         tvStreamName.setText(stream.getName());
-/*        String codec = stream.getUri().getQuery().get("codec");
-        if (codec.contains(":"))
-            codec = codec.split(":")[0];
-        tvStreamState.setText(stream.getUri().getQuery().get("sampleformat") + " - " + codec + " - " + stream.getStatus().toString());
+        updateNowPlaying(stream);
+    }
 
-        title.setEnabled(group.isConnected());
-        volumeSeekBar.setProgress(group.getConfig().getVolume().getPercent());
-        if (client.getConfig().getVolume().isMuted())
-            ibMute.setImageResource(R.drawable.ic_mute_icon);
-        else
-            ibMute.setImageResource(R.drawable.ic_speaker_icon);
-*/
+    private void updateNowPlaying(Stream stream) {
+        StreamProperties props = stream.getProperties();
+        if (!showNowPlaying || props == null || (!props.hasMetadata() && !props.canControl())) {
+            llNowPlaying.setVisibility(GONE);
+            return;
+        }
+
+        llNowPlaying.setVisibility(VISIBLE);
+
+        if (props.hasMetadata()) {
+            String title = props.getTitle();
+            String artist = props.getArtistString();
+            tvTrackTitle.setText(TextUtils.isEmpty(title) ? "" : title);
+            tvTrackTitle.setVisibility(TextUtils.isEmpty(title) ? GONE : VISIBLE);
+            tvTrackArtist.setText(TextUtils.isEmpty(artist) ? props.getAlbum() : artist);
+            tvTrackArtist.setVisibility(TextUtils.isEmpty(artist) && TextUtils.isEmpty(props.getAlbum()) ? GONE : VISIBLE);
+
+            Bitmap art = props.getArtBitmap();
+            if (art != null) {
+                ivAlbumArt.setImageBitmap(art);
+                ivAlbumArt.setVisibility(VISIBLE);
+            } else {
+                ivAlbumArt.setVisibility(GONE);
+            }
+        } else {
+            tvTrackTitle.setVisibility(GONE);
+            tvTrackArtist.setVisibility(GONE);
+            ivAlbumArt.setVisibility(GONE);
+        }
+
+        if (props.canControl()) {
+            ibPrevious.setVisibility(VISIBLE);
+            ibPlayPause.setVisibility(VISIBLE);
+            ibNext.setVisibility(VISIBLE);
+            ibPrevious.setEnabled(props.canGoPrevious());
+            ibPrevious.setAlpha(props.canGoPrevious() ? 1.0f : 0.3f);
+            ibNext.setEnabled(props.canGoNext());
+            ibNext.setAlpha(props.canGoNext() ? 1.0f : 0.3f);
+
+            if (props.isPlaying()) {
+                ibPlayPause.setImageResource(R.drawable.ic_pause_24px);
+            } else {
+                ibPlayPause.setImageResource(R.drawable.ic_play_arrow_24px);
+            }
+            ibPlayPause.setEnabled(props.canPause() || props.canPlay());
+            ibPlayPause.setAlpha((props.canPause() || props.canPlay()) ? 1.0f : 0.3f);
+        } else {
+            ibPrevious.setVisibility(GONE);
+            ibPlayPause.setVisibility(GONE);
+            ibNext.setVisibility(GONE);
+        }
     }
 
     private void updateVolume() {
@@ -164,6 +228,13 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         if (this.hideOffline == hideOffline)
             return;
         this.hideOffline = hideOffline;
+        update();
+    }
+
+    public void setShowNowPlaying(boolean show) {
+        if (this.showNowPlaying == show)
+            return;
+        this.showNowPlaying = show;
         update();
     }
 
@@ -231,6 +302,22 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
             listener.onMute(this, group.isMuted());
         } else if (v == ibSettings) {
             listener.onPropertiesClicked(this);
+        } else if (v == ibPrevious || v == ibPlayPause || v == ibNext) {
+            if (listener == null)
+                return;
+            String streamId = group.getStreamId();
+            if (v == ibPrevious) {
+                listener.onStreamControl(streamId, "previous");
+            } else if (v == ibNext) {
+                listener.onStreamControl(streamId, "next");
+            } else {
+                Stream stream = server.getStream(streamId);
+                if (stream != null && stream.getProperties() != null && stream.getProperties().isPlaying()) {
+                    listener.onStreamControl(streamId, "pause");
+                } else {
+                    listener.onStreamControl(streamId, "play");
+                }
+            }
         }
     }
 
@@ -307,6 +394,8 @@ public class GroupItem extends LinearLayout implements SeekBar.OnSeekBarChangeLi
         void onPropertiesClicked(GroupItem group);
 
         void onGroupStreamChanged(Group group, String streamId);
+
+        void onStreamControl(String streamId, String command);
     }
 
 }
