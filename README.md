@@ -8,4 +8,4 @@ Snapdroid is using the [Snapcast JSON-RPC API](https://github.com/badaix/snapcas
 
 ![Snapcast for Android](https://raw.githubusercontent.com/badaix/snapcast/master/doc/snapcast_android_scaled.png)
 
-You can find the current APK for your device on the [releases-page](https://github.com/badaix/snapdroid/releases/latest) and on [Google Play](https://play.google.com/store/apps/details?id=de.badaix.snapcast).
+You can find the current APK for your device on the [releases-page](https://github.com/badaix/snapdroid/releases/latest), on [Google Play](https://play.google.com/store/apps/details?id=de.badaix.snapcast) and on [F-Droid](https://f-droid.org/packages/de.badaix.snapcast/).
