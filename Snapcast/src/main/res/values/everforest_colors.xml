@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Everforest dark hard palette.
+         Pinned source: https://raw.githubusercontent.com/sainnhe/everforest/85a86eb62409e3ec88713bff3d1b9d7374e112e4/palette.md
+         (commit 85a86eb62409e3ec88713bff3d1b9d7374e112e4, retrieved 2026-08-09). -->
+
+    <!-- Dark hard background colors (palette1). -->
+    <color name="everforest_bg_dim">#1E2326</color>
+    <color name="everforest_bg0">#272E33</color>
+    <color name="everforest_bg1">#2E383C</color>
+    <color name="everforest_bg2">#374145</color>
+    <color name="everforest_bg3">#414B50</color>
+    <color name="everforest_bg4">#495156</color>
+    <color name="everforest_bg5">#4F5B58</color>
+    <color name="everforest_bg_visual">#4C3743</color>
+    <color name="everforest_bg_red">#493B40</color>
+    <color name="everforest_bg_yellow">#45443C</color>
+    <color name="everforest_bg_green">#3C4841</color>
+    <color name="everforest_bg_blue">#384B55</color>
+    <color name="everforest_bg_purple">#463F48</color>
+
+    <!-- Foreground colors (palette2). -->
+    <color name="everforest_fg">#D3C6AA</color>
+    <color name="everforest_red">#E67E80</color>
+    <color name="everforest_orange">#E69875</color>
+    <color name="everforest_yellow">#DBBC7F</color>
+    <color name="everforest_green">#A7C080</color>
+    <color name="everforest_aqua">#83C092</color>
+    <color name="everforest_blue">#7FBBB3</color>
+    <color name="everforest_purple">#D699B6</color>
+    <color name="everforest_grey0">#7A8478</color>
+    <color name="everforest_grey1">#859289</color>
+    <color name="everforest_grey2">#9DA9A0</color>
+</resources>

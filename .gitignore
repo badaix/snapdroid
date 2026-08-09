@@ -46,6 +46,11 @@ captures/
 .idea/caches/build_file_checksums.ser
 .idea/modules.xml
 
+# Eclipse/JDTLS project metadata
+.project
+.classpath
+.settings/
+
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.
 #*.jks
@@ -83,3 +88,6 @@ Snapcast/release/output.json
 
 Snapcast/.cxx
 Snapcast/libs/*.aar
+
+# Worktrees
+.worktrees/

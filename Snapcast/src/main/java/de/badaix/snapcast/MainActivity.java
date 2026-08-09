@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements GroupItem.GroupIt
                     Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT)
                             .show();
                 } else {
-                    Toast.makeText(this, "Snapdroid can't post notifications without POST_NOTIFICATIONS permission",
+                    Toast.makeText(this, "cracklepop can't post notifications without POST_NOTIFICATIONS permission",
                             Toast.LENGTH_LONG).show();
                 }
             });

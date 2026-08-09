@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Snapcast</string>
+    <string name="app_name">cracklepop</string>
     <string name="ticker_text">Snapclient started</string>
     <string name="notification_title">Snapclient</string>
     <string name="notification_text">Snapclient is running…</string>
@@ -9,7 +9,7 @@
     <string name="menu_delete">Delete</string>
     <string name="menu_group">Group</string>
 
-    <string name="title_activity_snapcast">Snapcast</string>
+    <string name="title_activity_snapcast">cracklepop</string>
 
     <string name="action_about">About…</string>
     <string name="action_settings">Settings…</string>

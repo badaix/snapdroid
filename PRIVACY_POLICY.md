@@ -1,4 +1,4 @@
-# Snapdroid: Privacy policy
+# cracklepop: Privacy policy
 
 This is an open source Android app developed by Johannes Pohl and [contributors](https://github.com/badaix/snapdroid/graphs/contributors). The source code is available on GitHub under the GPL-3.0; the app is also available on Google Play.
 
@@ -11,7 +11,7 @@ I hereby state, to the best of my knowledge and belief, that I have not programm
 
 The list of permissions required by the app can be found in the `AndroidManifest.xml` file:
 
-https://github.com/badaix/snapdroid/blob/master/Snapcast/src/main/AndroidManifest.xml
+https://github.com/slatkin/cracklepop/blob/develop/Snapcast/src/main/AndroidManifest.xml
 
 <br/>
 

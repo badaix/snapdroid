@@ -28,7 +28,7 @@ jobs:
       run: JAVA_HOME=$JAVA_HOME_17_X64 ./gradlew build
 
     - name: rename apk
-      run: mv /home/runner/work/snapdroid/snapdroid/Snapcast/build/outputs/apk/release/Snapcast-release-unsigned.apk /home/runner/work/snapdroid/snapdroid/Snapcast/build/outputs/apk/release/Snapcast.apk 
+      run: mv /home/runner/work/cracklepop/cracklepop/Snapcast/build/outputs/apk/release/Snapcast-release-unsigned.apk /home/runner/work/cracklepop/cracklepop/Snapcast/build/outputs/apk/release/Snapcast.apk
 
     - uses: filippoLeporati93/android-release-signer@v1
       if: github.event_name == 'push'
@@ -36,7 +36,7 @@ jobs:
       # ID used to access action output
       id: sign_app
       with:
-        releaseDirectory: /home/runner/work/snapdroid/snapdroid/Snapcast/build/outputs/apk/release
+        releaseDirectory: /home/runner/work/cracklepop/cracklepop/Snapcast/build/outputs/apk/release
         signingKeyBase64: ${{ secrets.SIGNING_KEY }}
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}

@@ -1,9 +1,13 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/everforest_bg0</item>
+        <item name="android:colorBackground">@color/everforest_bg0</item>
+        <item name="android:textColorPrimary">@color/everforest_fg</item>
+        <item name="android:textColorSecondary">@color/everforest_grey1</item>
         <item name="statusBarBackground">?attr/colorPrimaryDark</item>
     </style>
 </resources>
