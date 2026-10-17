@@ -1,17 +1,20 @@
 apply plugin: 'com.android.application'
 
+// Reuse an explicitly supplied, unchanged native client for Java-only builds.
+def prebuiltClientDir = providers.gradleProperty('prebuiltClientDir').orNull
+
 android {
     compileSdk 35
 
     defaultConfig {
-        applicationId "de.badaix.snapcast"
+        applicationId providers.gradleProperty('clientApplicationId').getOrElse("de.badaix.snapcast")
         minSdkVersion 21
         targetSdkVersion 35
         versionCode 2900
         versionName '0.29.0.0'
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
-        externalNativeBuild {
+        if (prebuiltClientDir == null) externalNativeBuild {
             cmake {
                 version "3.22.1"
                 cppFlags "-std=c++14"
@@ -29,13 +32,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    externalNativeBuild {
+    if (prebuiltClientDir == null) externalNativeBuild {
         cmake {
             path 'src/main/cpp/snapcast/CMakeLists.txt'
         }
     }
 
     buildToolsVersion = '35.0.0'
+    if (prebuiltClientDir != null) {
+        sourceSets.main.jniLibs.srcDirs = [prebuiltClientDir]
+        packagingOptions.jniLibs.useLegacyPackaging = true
+    }
     ndkVersion '27.0.12077973'
     lint {
         disable 'MissingTranslation'
@@ -50,20 +57,21 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
     // https://dl.google.com/dl/android/maven2/index.html
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     // compile 'com.android.support:recyclerview-v7:23.1.1'
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'com.github.badaix:oboe:1.9.0@aar'
-    implementation 'com.github.badaix:boost:1.85.0@aar'
-    implementation 'com.github.badaix:flac:1.4.2@aar'
-    implementation 'com.github.badaix:ogg:1.3.5@aar'
-    implementation 'com.github.badaix:opus:1.1.2@aar'
-    implementation 'com.github.badaix:soxr:0.1.3@aar'
-    implementation 'com.github.badaix:tremor:1.0.1@aar'
-    implementation 'com.github.badaix:vorbis:1.3.7@aar'
+    if (prebuiltClientDir == null) implementation 'com.github.badaix:oboe:1.9.0@aar'
+    if (prebuiltClientDir == null) implementation 'com.github.badaix:boost:1.85.0@aar'
+    if (prebuiltClientDir == null) implementation 'com.github.badaix:flac:1.4.2@aar'
+    if (prebuiltClientDir == null) implementation 'com.github.badaix:ogg:1.3.5@aar'
+    if (prebuiltClientDir == null) implementation 'com.github.badaix:opus:1.1.2@aar'
+    if (prebuiltClientDir == null) implementation 'com.github.badaix:soxr:0.1.3@aar'
+    if (prebuiltClientDir == null) implementation 'com.github.badaix:tremor:1.0.1@aar'
+    if (prebuiltClientDir == null) implementation 'com.github.badaix:vorbis:1.3.7@aar'
 }
 
 

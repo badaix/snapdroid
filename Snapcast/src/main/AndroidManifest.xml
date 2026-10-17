@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -14,7 +15,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Media-session notifications are exempt on Android 13+. Do not request
+         ordinary notifications: keep the required idle FGS notice out of the drawer. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <application
@@ -30,6 +32,10 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
             <!--            android:launchMode="singleInstance" -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -52,6 +58,15 @@
             android:name=".SnapclientService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback" />
+
+        <service android:name=".SnapcastTileService" android:exported="true"
+            android:enabled="@bool/quick_settings_available" tools:targetApi="24"
+            android:label="Snapcast" android:icon="@drawable/ic_media_play"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
         <!-- android:theme="@style/Theme.AppCompat.Light.DialogWhenLarge" -->
         <activity

@@ -83,3 +83,6 @@ Snapcast/release/output.json
 
 Snapcast/.cxx
 Snapcast/libs/*.aar
+
+# Locally signed APKs and signing sidecars
+/artifacts/

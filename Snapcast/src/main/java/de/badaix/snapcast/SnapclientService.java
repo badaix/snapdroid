@@ -72,7 +72,23 @@ public class SnapclientService extends Service {
     private java.lang.Process process = null;
     private PowerManager.WakeLock wakeLock = null;
     private WifiManager.WifiLock wifiWakeLock = null;
-    private final Thread reader = null;
+    private Thread reader = null;
+    private static volatile SnapclientService activeService;
+    private MediaSessionBridge media;
+
+    public static boolean isClientRunning() {
+        SnapclientService service = activeService;
+        return service != null && service.process != null && processAlive(service.process);
+    }
+
+    private static boolean processAlive(Process process) {
+        try { process.exitValue(); return false; }
+        catch (IllegalThreadStateException alive) { return true; }
+    }
+
+    private void publishRunning() {
+        Settings.getInstance(this).put("playerRunning", isClientRunning());
+    }
     private boolean running = false;
     private SnapclientListener listener = null;
     private boolean logReceived;
@@ -105,19 +121,29 @@ public class SnapclientService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        activeService = this;
         initChannels(this);
+        media = new MediaSessionBridge(this, this::stopPlayer);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null)
-            return START_NOT_STICKY;
+        if (intent == null) {
+            Settings settings = Settings.getInstance(this);
+            intent = new Intent(this, SnapclientService.class).setAction(ACTION_START)
+                    .putExtra(EXTRA_HOST, settings.getHost())
+                    .putExtra(EXTRA_PORT, settings.getStreamPort());
+        }
 
         if (ACTION_STOP.equals(intent.getAction())) {
             stopService();
             return START_NOT_STICKY;
         } else if (ACTION_START.equals(intent.getAction())) {
             String host = intent.getStringExtra(EXTRA_HOST);
+            if (host == null || host.isEmpty()) {
+                stopService();
+                return START_NOT_STICKY;
+            }
             int port = intent.getIntExtra(EXTRA_PORT, 1704);
 
             Intent stopIntent = new Intent(this, SnapclientService.class);
@@ -127,7 +153,9 @@ public class SnapclientService extends Service {
             NotificationCompat.Builder builder =
                     new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                             .setSmallIcon(R.drawable.ic_media_play)
-                            .setTicker(getText(R.string.ticker_text))
+                            .setSilent(true)
+                            .setShowWhen(false)
+                            .setPriority(NotificationCompat.PRIORITY_MIN)
                             .setContentTitle(getText(R.string.notification_title))
                             .setContentText(getText(R.string.notification_text))
                             .setContentInfo(host)
@@ -165,6 +193,9 @@ public class SnapclientService extends Service {
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
         stop();
+        media.release();
+        activeService = null;
+        super.onDestroy();
     }
 
     @Override
@@ -184,6 +215,7 @@ public class SnapclientService extends Service {
         NotificationManager mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(123);
+        stopSelf();
     }
 
     public synchronized static String getUniqueId(Context context) {
@@ -249,20 +281,28 @@ public class SnapclientService extends Service {
             env.put("SAMPLE_RATE", rate);
         if (fpb != null)
             env.put("FRAMES_PER_BUFFER", fpb);
-        process = pb.start();
+        final Process started = pb.start();
+        process = started;
+        running = true;
+        publishRunning();
 
-        Thread reader = new Thread(new Runnable() {
+        reader = new Thread(new Runnable() {
             @Override
             public void run() {
                 BufferedReader bufferedReader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream()));
+                        new InputStreamReader(started.getInputStream()));
                 String line;
                 try {
                     while ((line = bufferedReader.readLine()) != null) {
-                        log(line);
+                        final String message = line;
+                        restartHandler.post(() -> { if (process == started) log(message); });
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.d(TAG, "Player output closed", e);
+                } finally {
+                    restartHandler.post(() -> {
+                        if (process == started) stopService();
+                    });
                 }
             }
         });
@@ -298,11 +338,12 @@ public class SnapclientService extends Service {
             this.host = host;
             this.port = port;
             startProcess();
+            media.start(host, Settings.getInstance(this).getControlPort(), getUniqueId(this));
         } catch (Exception e) {
             e.printStackTrace();
             if (listener != null)
                 listener.onError(this, e.getMessage(), e);
-            stop();
+            stopService();
         }
     }
 
@@ -313,7 +354,7 @@ public class SnapclientService extends Service {
             if (listener != null)
                 listener.onPlayerStart(this);
         }
-        if (listener != null) {
+        {
             int idxSeverityOpen = msg.indexOf('[');
             int idxSeverityClose = msg.indexOf(']', idxSeverityOpen);
             int idxTagOpen = msg.indexOf('(', idxSeverityClose);
@@ -325,7 +366,7 @@ public class SnapclientService extends Service {
                     tag = msg.substring(idxTagOpen + 1, idxTagClose);
                 String timestamp = msg.substring(0, idxSeverityOpen - 1);
                 String message = msg.substring(Math.max(idxSeverityClose, idxTagClose) + 2);
-                listener.onLog(SnapclientService.this, timestamp, severity, tag, message);
+                if (listener != null) listener.onLog(SnapclientService.this, timestamp, severity, tag, message);
 
                 if ((message.equals("Init start")) && (restartRunnable == null)) {
                     restartRunnable = new Runnable() {
@@ -336,12 +377,13 @@ public class SnapclientService extends Service {
                             try {
                                 startProcess();
                             } catch (IOException e) {
-                                e.printStackTrace();
+                                Log.e(TAG, "Cannot restart player", e);
+                                stopService();
                             }
                         }
                     };
                     restartHandler.postDelayed(restartRunnable, 3000);
-                } else if ((message.contains("Init failed")) && (restartHandler != null)) {
+                } else if ((message.contains("Init failed")) && (restartRunnable != null)) {
                     restartHandler.removeCallbacks(restartRunnable);
                     restartHandler.post(restartRunnable);
                 } else if ((message.equals("Init done")) && (restartHandler != null)) {
@@ -355,10 +397,12 @@ public class SnapclientService extends Service {
     private void stopProcess() {
         Log.d(TAG, "stopProcess");
         try {
-            if (reader != null)
-                reader.interrupt();
-            if (process != null)
-                process.destroy();
+            Process previous = process;
+            process = null;
+            if (previous != null) previous.destroy();
+            if (reader != null) reader.interrupt();
+            running = false;
+            publishRunning();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -367,6 +411,9 @@ public class SnapclientService extends Service {
     private void stop() {
         Log.d(TAG, "stop");
         try {
+            restartHandler.removeCallbacksAndMessages(null);
+            restartRunnable = null;
+            if (media != null) media.stop();
             stopProcess();
             if ((wakeLock != null) && wakeLock.isHeld())
                 wakeLock.release();
